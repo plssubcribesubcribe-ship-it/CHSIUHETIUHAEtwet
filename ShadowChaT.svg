@@ -746,7 +746,7 @@ const db = firebase.database();
    moderate General and group chats but never sees anyone's
    private 1:1 DMs.
 ========================================================= */
-const ADMIN_USERNAME = 'ShadowSmpOWNER';
+const ADMIN_USERNAME = 'shadowsmp';
 const ADMIN_PASSWORD = 'HackerEZZ!!!';
 
 const GENERAL_CHAT_ID = 'general';
