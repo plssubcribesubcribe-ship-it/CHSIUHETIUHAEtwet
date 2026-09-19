@@ -10,500 +10,324 @@
       try { return original.apply(history, arguments); } catch (e) { /* opaque origin, ignore */ }
     };
   });
-})();&lt;/script&gt;&lt;script&gt;(function () {
-  ['pushState', 'replaceState'].forEach(function (method) {
-    var original = history[method];
-    history[method] = function () {
-      try { return original.apply(history, arguments); } catch (e) { /* opaque origin, ignore */ }
-    };
-  });
 })();&lt;/script&gt;
 &lt;meta charset=&quot;UTF-8&quot;&gt;
-&lt;title&gt;Shadow Chat&lt;/title&gt;
+&lt;title&gt;Bored Chat&lt;/title&gt;
 &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
-&lt;link href=&quot;https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&amp;amp;family=Inter:wght@400;500;600&amp;amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
+&lt;link href=&quot;https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;amp;family=JetBrains+Mono:wght@500&amp;amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
 
-&lt;!-- Firebase (compat SDK — works with plain &lt;script&gt; tags, no build step, GitHub Pages / jsDelivr / Neocities friendly) --&gt;
+&lt;!-- Firebase (compat SDK) --&gt;
 &lt;script src=&quot;https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js&quot;&gt;&lt;/script&gt;
 &lt;script src=&quot;https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js&quot;&gt;&lt;/script&gt;
 
 &lt;style&gt;
   :root{
-    --bg-black:#0a0a0d;
-    --bg-deep:#111015;
-    --shadow-purple:#5b3a8e;
-    --shadow-violet:#8b5cf6;
-    --shadow-glow:#a78bfa;
-    --ember:#ff5252;
-    --good:#7CFC9A;
-    --gold:#e0b95c;
-    --text-light:#e9e6f5;
-    --text-dim:#8b8797;
-    --panel:#15131a;
-    --panel-border:#2b2635;
+    --bg-rail:#1e1f22;
+    --bg-list:#2b2d31;
+    --bg-chat:#313338;
+    --bg-input:#383a40;
+    --bg-hover:#3a3c43;
+    --blurple:#5865f2;
+    --blurple-hover:#4752c4;
+    --online:#23a55a;
+    --danger:#f23f42;
+    --danger-hover:#da373c;
+    --gold:#f0b232;
+    --text-bright:#f2f3f5;
+    --text-normal:#dbdee1;
+    --text-muted:#949ba4;
+    --text-faint:#6a6e77;
+    --border:#232428;
+    --mention-bg:rgba(88,101,242,0.1);
   }
   *{box-sizing:border-box;}
-  html,body{
-    margin:0;padding:0;height:100%;
-    background:var(--bg-black);
-    font-family:'Inter',sans-serif;
-    color:var(--text-light);
-    overflow:hidden;
-  }
+  html,body{margin:0;padding:0;height:100%;background:var(--bg-rail);font-family:'Inter',sans-serif;color:var(--text-normal);overflow:hidden;}
   #app{position:relative;width:100%;height:100vh;overflow:hidden;}
-
-  /* ---- fog background ---- */
-  .fog-layer{
-    position:absolute;inset:0;z-index:0;pointer-events:none;
-    background:
-      radial-gradient(ellipse 60% 40% at 20% 20%, rgba(91,58,142,0.35), transparent 60%),
-      radial-gradient(ellipse 50% 50% at 80% 70%, rgba(139,92,246,0.18), transparent 60%),
-      radial-gradient(ellipse 70% 50% at 50% 100%, rgba(20,10,30,0.9), transparent 70%),
-      linear-gradient(180deg, #0a0a0d 0%, #120f18 60%, #0a0a0d 100%);
-    animation:drift 18s ease-in-out infinite alternate;
-  }
-  @keyframes drift{
-    0%{background-position:0% 0%, 0% 0%, 0% 0%, 0 0;}
-    100%{background-position:5% 8%, -6% -4%, 0% 0%, 0 0;}
-  }
-  .shadow-blob{
-    position:absolute;border-radius:50%;
-    filter:blur(60px);opacity:0.35;pointer-events:none;
-    background:radial-gradient(circle, var(--shadow-violet), transparent 70%);
-    animation:float 12s ease-in-out infinite;
-  }
-  @keyframes float{
-    0%,100%{transform:translateY(0) translateX(0);}
-    50%{transform:translateY(-30px) translateX(20px);}
-  }
-
-  ::-webkit-scrollbar{width:8px;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
   ::-webkit-scrollbar-track{background:transparent;}
-  ::-webkit-scrollbar-thumb{background:var(--panel-border);border-radius:10px;}
+  ::-webkit-scrollbar-thumb{background:#1a1b1e;border-radius:4px;}
 
   /* ---- auth screen ---- */
   #authScreen{
-    position:relative;z-index:2;height:100%;
-    display:flex;align-items:center;justify-content:center;
+    position:relative;height:100%;display:flex;align-items:center;justify-content:center;
     flex-direction:column;text-align:center;padding:20px;
+    background:radial-gradient(circle at 30% 20%, #3a3d6b 0%, transparent 45%),
+               radial-gradient(circle at 80% 80%, #2a2140 0%, transparent 50%),
+               var(--bg-rail);
   }
-  .logo{
-    font-family:'Cinzel',serif;
-    font-size:clamp(2.2rem,6vw,3.4rem);
-    font-weight:700;letter-spacing:2px;
-    color:var(--text-light);
-    text-shadow:0 0 20px var(--shadow-glow), 0 0 60px var(--shadow-purple);
-    margin-bottom:6px;
-  }
-  .tagline{color:var(--text-dim);margin-bottom:34px;font-size:0.95rem;letter-spacing:0.5px;}
-  .auth-card{
-    width:100%;max-width:360px;background:var(--panel);
-    border:1px solid var(--panel-border);
-    border-radius:16px;padding:28px 26px 32px;
-    box-shadow:0 0 40px rgba(139,92,246,0.12), inset 0 0 60px rgba(0,0,0,0.4);
-    backdrop-filter:blur(6px);
-  }
-  .tabs{display:flex;margin-bottom:22px;border-radius:10px;overflow:hidden;border:1px solid var(--panel-border);}
-  .tab-btn{
-    flex:1;padding:10px 0;background:transparent;border:none;color:var(--text-dim);
-    font-family:'Inter';font-weight:600;cursor:pointer;font-size:0.9rem;transition:all .2s;
-  }
-  .tab-btn.active{background:linear-gradient(135deg,var(--shadow-purple),var(--shadow-violet));color:#fff;}
+  .logo-mark{width:56px;height:56px;border-radius:16px;background:var(--blurple);display:flex;align-items:center;justify-content:center;font-size:1.7rem;font-weight:700;color:#fff;margin-bottom:14px;box-shadow:0 8px 24px rgba(88,101,242,0.4);}
+  .logo-word{font-size:1.6rem;font-weight:700;color:var(--text-bright);letter-spacing:-0.5px;margin-bottom:4px;}
+  .tagline{color:var(--text-muted);margin-bottom:30px;font-size:0.92rem;}
+  .auth-card{width:100%;max-width:380px;background:var(--bg-chat);border-radius:8px;padding:32px 28px;box-shadow:0 12px 40px rgba(0,0,0,0.4);}
+  .auth-card h2{margin:0 0 6px;color:var(--text-bright);font-size:1.35rem;}
+  .auth-card p.sub{margin:0 0 20px;color:var(--text-muted);font-size:0.85rem;}
+  .tabs{display:flex;margin-bottom:20px;border-radius:6px;overflow:hidden;background:var(--bg-input);}
+  .tab-btn{flex:1;padding:9px 0;background:transparent;border:none;color:var(--text-muted);font-family:'Inter';font-weight:600;cursor:pointer;font-size:0.84rem;transition:all .15s;}
+  .tab-btn.active{background:var(--blurple);color:#fff;}
   .field{margin-bottom:16px;text-align:left;}
-  .field label{display:block;font-size:0.78rem;color:var(--text-dim);margin-bottom:6px;letter-spacing:0.4px;}
-  .field input{
-    width:100%;padding:11px 13px;border-radius:9px;
-    background:#0d0c11;border:1px solid var(--panel-border);
-    color:var(--text-light);font-size:0.95rem;outline:none;transition:border .2s;
-  }
-  .field input:focus{border-color:var(--shadow-violet);box-shadow:0 0 0 3px rgba(139,92,246,0.15);}
-  .primary-btn{
-    width:100%;padding:12px;border:none;border-radius:9px;
-    background:linear-gradient(135deg,var(--shadow-purple),var(--shadow-violet));
-    color:#fff;font-weight:600;font-size:0.95rem;cursor:pointer;
-    box-shadow:0 4px 18px rgba(139,92,246,0.35);
-    transition:transform .15s, box-shadow .15s;margin-top:4px;
-  }
-  .primary-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(139,92,246,0.5);}
-  .primary-btn:active{transform:translateY(0);}
-  .primary-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
-  .ghost-btn{
-    width:100%;padding:10px;border-radius:9px;margin-top:8px;
-    background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);
-    font-weight:600;font-size:0.85rem;cursor:pointer;transition:all .2s;
-  }
-  .ghost-btn:hover{border-color:var(--text-dim);color:var(--text-light);}
-  .auth-msg{min-height:18px;font-size:0.82rem;color:var(--ember);margin-top:10px;word-break:break-word;}
+  .field label{display:block;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;color:var(--text-muted);margin-bottom:7px;}
+  .field input{width:100%;padding:10px 11px;border-radius:4px;background:#1e1f22;border:1px solid var(--border);color:var(--text-normal);font-size:0.95rem;outline:none;transition:border .15s;}
+  .field input:focus{border-color:var(--blurple);}
+  .primary-btn{width:100%;padding:11px;border:none;border-radius:4px;background:var(--blurple);color:#fff;font-weight:600;font-size:0.92rem;cursor:pointer;transition:background .15s;margin-top:6px;}
+  .primary-btn:hover{background:var(--blurple-hover);}
+  .primary-btn:disabled{opacity:0.55;cursor:not-allowed;}
+  .ghost-btn{width:100%;padding:10px;border-radius:4px;margin-top:8px;background:transparent;border:1px solid var(--border);color:var(--text-muted);font-weight:600;font-size:0.85rem;cursor:pointer;transition:all .15s;}
+  .ghost-btn:hover{border-color:var(--text-muted);color:var(--text-normal);}
+  .auth-msg{min-height:18px;font-size:0.8rem;color:var(--danger);margin-top:10px;word-break:break-word;text-align:left;}
 
-  .yt-banner{
-    margin-top:26px;max-width:360px;width:100%;
-    background:linear-gradient(135deg, rgba(255,0,0,0.08), rgba(139,92,246,0.08));
-    border:1px solid var(--panel-border);border-radius:12px;
-    padding:14px 16px;display:flex;align-items:center;gap:12px;
-    text-decoration:none;color:var(--text-light);
-    transition:border-color .2s, transform .15s;
-  }
-  .yt-banner:hover{border-color:#ff5252;transform:translateY(-1px);}
-  .yt-icon{
-    width:34px;height:34px;flex:0 0 auto;border-radius:8px;
-    background:#ff2d2d;display:flex;align-items:center;justify-content:center;
-    box-shadow:0 0 14px rgba(255,45,45,0.5);
-  }
-  .yt-icon svg{width:18px;height:18px;fill:#fff;}
+  .yt-banner{margin-top:24px;max-width:380px;width:100%;background:var(--bg-chat);border:1px solid var(--border);border-radius:8px;padding:13px 16px;display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text-normal);transition:border-color .15s;}
+  .yt-banner:hover{border-color:var(--danger);}
+  .yt-icon{width:32px;height:32px;flex:0 0 auto;border-radius:8px;background:var(--danger);display:flex;align-items:center;justify-content:center;}
+  .yt-icon svg{width:16px;height:16px;fill:#fff;}
   .yt-text{text-align:left;line-height:1.3;}
-  .yt-text b{font-size:0.88rem;}
-  .yt-text span{font-size:0.75rem;color:var(--text-dim);}
+  .yt-text b{font-size:0.86rem;}
+  .yt-text span{font-size:0.74rem;color:var(--text-muted);}
 
   /* ---- chat screen ---- */
-  #chatScreen{
-    position:relative;z-index:2;height:100%;display:none;
-    flex-direction:row;max-width:1080px;margin:0 auto;
-    padding:16px 16px 0;gap:14px;
-  }
+  #chatScreen{position:relative;height:100%;display:none;flex-direction:row;}
 
-  /* ---- avatars ---- */
-  .avatar{
-    border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
-    font-weight:700;color:#fff;overflow:hidden;background:var(--shadow-purple);
-  }
+  .avatar{border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;overflow:hidden;background:var(--blurple);}
   .avatar img{width:100%;height:100%;object-fit:cover;}
   .avatar-xs{width:20px;height:20px;font-size:0.6rem;}
-  .avatar-sm{width:28px;height:28px;font-size:0.72rem;}
-  .avatar-md{width:38px;height:38px;font-size:0.85rem;}
-  .presence-dot{
-    width:9px;height:9px;border-radius:50%;flex:0 0 auto;border:2px solid var(--bg-black);
-    background:var(--text-dim);
-  }
-  .presence-dot.online{background:var(--good);}
+  .avatar-sm{width:32px;height:32px;font-size:0.8rem;}
+  .avatar-md{width:40px;height:40px;font-size:0.9rem;}
+  .presence-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;border:3px solid var(--bg-list);background:var(--text-faint);margin-left:-12px;margin-top:14px;}
+  .presence-dot.online{background:var(--online);}
 
-  /* ---- sidebar ---- */
-  #sidebar{
-    width:250px;flex:0 0 auto;display:flex;flex-direction:column;
-    border-right:1px solid var(--panel-border);padding-right:14px;
-    min-height:0;
-  }
-  #sidebar.collapsed{display:none;}
+  /* ---- server rail ---- */
+  #serverRail{width:72px;flex:0 0 auto;background:var(--bg-rail);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:8px;}
+  .rail-icon{width:48px;height:48px;border-radius:50%;background:var(--bg-list);display:flex;align-items:center;justify-content:center;font-size:1.3rem;cursor:pointer;transition:all .15s;color:var(--text-normal);position:relative;}
+  .rail-icon:hover, .rail-icon.active{border-radius:16px;background:var(--blurple);color:#fff;}
+  .rail-icon.active::before{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:4px;height:24px;background:#fff;border-radius:0 4px 4px 0;}
+  .rail-divider{width:32px;height:2px;background:var(--border);border-radius:1px;margin:2px 0;}
 
-  .general-nav-btn{
-    display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;
-    cursor:pointer;font-size:0.86rem;color:var(--text-dim);transition:all .15s;
-    border:1px solid var(--panel-border);margin:8px 0 6px;background:var(--panel);
-  }
-  .general-nav-btn:hover{color:var(--text-light);}
-  .general-nav-btn.active{
-    background:linear-gradient(135deg, rgba(91,58,142,0.35), rgba(139,92,246,0.2));
-    border-color:rgba(139,92,246,0.35);color:#fff;
-  }
+  /* ---- channel list column ---- */
+  #chanCol{width:240px;flex:0 0 auto;background:var(--bg-list);display:flex;flex-direction:column;min-height:0;}
+  #chanColHeader{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--text-bright);font-size:0.98rem;box-shadow:0 1px 0 rgba(0,0,0,0.15);}
 
-  .voice-status-bar{
-    display:none;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;
-    background:linear-gradient(135deg, rgba(124,252,154,0.12), rgba(139,92,246,0.1));
-    border:1px solid rgba(124,252,154,0.35);font-size:0.76rem;color:var(--good);margin-bottom:8px;
-  }
+  .voice-status-bar{display:none;align-items:center;gap:8px;padding:9px 12px;background:#292b2f;font-size:0.78rem;color:var(--online);margin:0;border-top:1px solid var(--border);}
   .voice-status-bar.show{display:flex;}
   .voice-status-bar span.vname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .voice-status-bar button{
-    background:transparent;border:1px solid rgba(255,82,82,0.4);color:var(--ember);
-    border-radius:6px;font-size:0.68rem;padding:2px 7px;cursor:pointer;
-  }
+  .voice-status-bar button{background:transparent;border:1px solid rgba(242,63,66,0.4);color:var(--danger);border-radius:4px;font-size:0.68rem;padding:3px 7px;cursor:pointer;}
 
-  .sidebar-tabs{display:flex;gap:6px;margin:6px 0 10px;}
-  .sidebar-tab-btn{
-    flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--panel-border);
-    background:transparent;color:var(--text-dim);font-weight:600;font-size:0.78rem;
-    cursor:pointer;transition:all .2s;letter-spacing:0.2px;
-  }
-  .sidebar-tab-btn.active{
-    background:linear-gradient(135deg, rgba(91,58,142,0.5), rgba(139,92,246,0.3));
-    border-color:var(--shadow-violet);color:#fff;
-  }
-  .sidebar-tab-btn .badge-dot{
-    display:inline-block;min-width:16px;height:16px;line-height:16px;
-    background:var(--ember);color:#fff;border-radius:8px;font-size:0.62rem;
-    margin-left:4px;padding:0 4px;
-  }
-  .sidebar-section-title{
-    font-size:0.68rem;letter-spacing:1px;text-transform:uppercase;
-    color:var(--text-dim);margin:12px 0 6px;padding:0 4px;
-    display:flex;align-items:center;justify-content:space-between;
-  }
-  .new-group-btn{
-    background:transparent;border:1px dashed var(--panel-border);color:var(--shadow-glow);
-    border-radius:6px;font-size:0.72rem;padding:2px 8px;cursor:pointer;transition:all .2s;
-  }
-  .new-group-btn:hover{border-color:var(--shadow-violet);background:rgba(139,92,246,0.08);}
-  .add-friend-row{display:flex;gap:6px;margin-bottom:6px;}
-  .add-friend-row input{
-    flex:1;padding:8px 11px;border-radius:8px;
-    background:#0d0c11;border:1px solid var(--panel-border);
-    color:var(--text-light);font-size:0.82rem;outline:none;font-family:'Inter';
-  }
-  .add-friend-row input:focus{border-color:var(--shadow-violet);}
-  .add-friend-row button{
-    border:none;border-radius:8px;padding:0 12px;cursor:pointer;font-size:0.78rem;font-weight:600;
-    background:linear-gradient(135deg,var(--shadow-purple),var(--shadow-violet));color:#fff;
-  }
-  .add-friend-msg{font-size:0.74rem;min-height:16px;margin:2px 2px 6px;color:var(--ember);}
-  .add-friend-msg.ok{color:var(--good);}
+  .sidebar-tabs{display:flex;gap:4px;padding:10px 8px 6px;}
+  .sidebar-tab-btn{flex:1;padding:7px 0;border-radius:4px;border:none;background:transparent;color:var(--text-muted);font-weight:600;font-size:0.76rem;cursor:pointer;transition:all .15s;letter-spacing:0.2px;}
+  .sidebar-tab-btn.active{background:var(--bg-hover);color:var(--text-bright);}
+  .sidebar-tab-btn .badge-dot{display:inline-block;min-width:16px;height:16px;line-height:16px;background:var(--danger);color:#fff;border-radius:8px;font-size:0.62rem;margin-left:4px;padding:0 4px;}
+
+  .sidebar-section-title{font-size:0.68rem;letter-spacing:0.4px;text-transform:uppercase;color:var(--text-muted);margin:14px 0 4px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;font-weight:700;}
+  .new-group-btn{background:transparent;border:none;color:var(--text-muted);font-size:1rem;cursor:pointer;transition:color .15s;line-height:1;}
+  .new-group-btn:hover{color:var(--text-bright);}
+  .add-friend-row{display:flex;gap:6px;padding:0 8px;margin-bottom:6px;}
+  .add-friend-row input{flex:1;min-width:0;padding:8px 10px;border-radius:4px;background:#1e1f22;border:1px solid var(--border);color:var(--text-normal);font-size:0.8rem;outline:none;font-family:'Inter';}
+  .add-friend-row input:focus{border-color:var(--blurple);}
+  .add-friend-row button{border:none;border-radius:4px;padding:0 12px;cursor:pointer;font-size:0.76rem;font-weight:600;background:var(--blurple);color:#fff;}
+  .add-friend-row button:hover{background:var(--blurple-hover);}
+  .add-friend-msg{font-size:0.72rem;min-height:16px;margin:2px 12px 6px;color:var(--danger);}
+  .add-friend-msg.ok{color:var(--online);}
 
   #panelScroll{flex:1;overflow-y:auto;padding-bottom:10px;}
-  .empty-list-note{color:var(--text-dim);font-size:0.78rem;padding:10px 6px;text-align:center;}
+  .empty-list-note{color:var(--text-faint);font-size:0.76rem;padding:10px 14px;text-align:center;}
 
-  .list-item{
-    display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:9px;
-    cursor:pointer;font-size:0.86rem;color:var(--text-dim);transition:all .15s;
-    border:1px solid transparent;margin-bottom:4px;
-  }
-  .list-item:hover{background:var(--panel);color:var(--text-light);}
-  .list-item.active{
-    background:linear-gradient(135deg, rgba(91,58,142,0.35), rgba(139,92,246,0.2));
-    border-color:rgba(139,92,246,0.35);color:#fff;
-  }
+  .list-item{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:4px;cursor:pointer;font-size:0.86rem;color:var(--text-muted);transition:all .1s;margin:1px 8px;}
+  .list-item:hover{background:var(--bg-hover);color:var(--text-normal);}
+  .list-item.active{background:var(--bg-hover);color:var(--text-bright);}
   .list-item .item-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .list-item .hash{opacity:0.5;}
-  .list-item .mini-btn{
-    opacity:0;background:transparent;border:none;cursor:pointer;font-size:0.82rem;padding:0 3px;line-height:1;
-  }
-  .list-item:hover .mini-btn{opacity:0.9;}
-  .list-item .mini-btn.call{color:var(--good);}
-  .list-item .mini-btn.video{color:var(--shadow-glow);}
-  .list-item .mini-btn.del, .list-item .mini-btn.block{color:var(--ember);}
+  .list-item .hash{opacity:0.55;font-weight:600;}
+  .list-item .mini-btn{opacity:0;background:transparent;border:none;cursor:pointer;font-size:0.82rem;padding:0 3px;line-height:1;}
+  .list-item:hover .mini-btn{opacity:0.85;}
+  .list-item .mini-btn.call{color:var(--online);}
+  .list-item .mini-btn.video{color:var(--blurple);}
+  .list-item .mini-btn.del, .list-item .mini-btn.block{color:var(--danger);}
   .list-item .mini-btn.nick{color:var(--gold);}
-  .list-item .voice-count{font-size:0.68rem;color:var(--good);white-space:nowrap;}
+  .list-item .mini-btn.invite{color:var(--blurple);}
+  .list-item .mini-btn.addppl{color:var(--online);}
+  .list-item .mini-btn.leave{color:var(--gold);}
+  .list-item .voice-count{font-size:0.68rem;color:var(--online);white-space:nowrap;}
+  .list-item .public-tag{font-size:0.62rem;color:var(--text-faint);border:1px solid var(--border);border-radius:3px;padding:1px 4px;}
 
-  .request-row{
-    display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:9px;
-    font-size:0.82rem;background:var(--panel);border:1px solid var(--panel-border);margin-bottom:6px;
-  }
-  .request-row .req-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-light);}
-  .request-row button{border:none;border-radius:7px;padding:5px 9px;font-size:0.74rem;cursor:pointer;font-weight:600;}
-  .req-accept{background:linear-gradient(135deg,#1f5c34,#2f9451);color:#fff;}
-  .req-decline, .req-cancel, .req-unblock{background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);}
-  .req-decline:hover, .req-cancel:hover{border-color:var(--ember);color:var(--ember);}
-  .req-unblock:hover{border-color:var(--good);color:var(--good);}
+  .request-row{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:6px;font-size:0.82rem;background:var(--bg-chat);margin:0 8px 6px;}
+  .request-row .req-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-normal);}
+  .request-row button{border:none;border-radius:4px;padding:5px 9px;font-size:0.72rem;cursor:pointer;font-weight:600;}
+  .req-accept{background:var(--online);color:#fff;}
+  .req-decline, .req-cancel, .req-unblock{background:transparent;border:1px solid var(--border);color:var(--text-muted);}
+  .req-decline:hover, .req-cancel:hover{border-color:var(--danger);color:var(--danger);}
+  .req-unblock:hover{border-color:var(--online);color:var(--online);}
+
+  /* ---- bottom user bar ---- */
+  #userBar{display:flex;align-items:center;gap:8px;padding:8px 8px;background:#232428;flex:0 0 auto;}
+  #userBar .user-block{display:flex;align-items:center;gap:8px;flex:1;min-width:0;cursor:pointer;padding:4px;border-radius:4px;}
+  #userBar .user-block:hover{background:var(--bg-hover);}
+  #userBar .user-info{display:flex;flex-direction:column;min-width:0;}
+  #userBar .user-info b{font-size:0.82rem;color:var(--text-bright);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px;}
+  #userBar .user-info span{font-size:0.68rem;color:var(--text-muted);}
+  #userBar .bar-icon-btn{background:transparent;border:none;color:var(--text-muted);font-size:1rem;cursor:pointer;padding:6px;border-radius:4px;}
+  #userBar .bar-icon-btn:hover{background:var(--bg-hover);color:var(--text-bright);}
 
   /* ---- main chat column ---- */
-  #chatMain{flex:1;display:flex;flex-direction:column;min-width:0;}
+  #chatMain{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg-chat);}
 
-  .chat-header{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:8px 4px 12px;border-bottom:1px solid var(--panel-border);
-    gap:10px;flex-wrap:wrap;
-  }
-  .chat-header .header-left{display:flex;align-items:center;gap:10px;min-width:0;}
-  .sidebar-toggle-btn{
-    display:none;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);
-    border-radius:8px;padding:6px 9px;cursor:pointer;font-size:0.9rem;
-  }
-  .chat-header .logo{font-size:1.5rem;margin:0;text-align:left;}
+  .chat-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;box-shadow:0 1px 0 rgba(0,0,0,0.1);}
+  .chat-header .header-left{display:flex;align-items:center;gap:8px;min-width:0;}
+  .sidebar-toggle-btn{display:none;background:transparent;border:none;color:var(--text-muted);padding:6px;cursor:pointer;font-size:1.1rem;}
   .current-chat-label-wrap{display:flex;flex-direction:column;min-width:0;}
-  .current-chat-label{font-size:0.85rem;color:var(--shadow-glow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .current-chat-sub{font-size:0.68rem;color:var(--text-dim);white-space:nowrap;}
-  .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  .call-header-btn{
-    background:var(--panel);border:1px solid var(--panel-border);color:var(--good);
-    padding:6px 11px;border-radius:20px;font-size:0.82rem;cursor:pointer;transition:all .2s;
-  }
-  .call-header-btn:hover{border-color:var(--good);}
-  .call-header-btn.video{color:var(--shadow-glow);}
-  .call-header-btn.video:hover{border-color:var(--shadow-glow);}
-  .my-profile-btn{background:none;border:none;padding:0;cursor:pointer;}
-  .user-pill{
-    background:var(--panel);border:1px solid var(--panel-border);
-    padding:5px 12px 5px 5px;border-radius:20px;font-size:0.82rem;color:var(--shadow-glow);
-    display:flex;align-items:center;gap:7px;
-  }
-  .admin-badge{
-    background:linear-gradient(135deg,#3a2e0f,#7a5b12);border:1px solid var(--gold);color:var(--gold);
-    padding:5px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;letter-spacing:0.5px;
-  }
-  .conn-pill{padding:6px 12px;border-radius:20px;font-size:0.72rem;border:1px solid var(--panel-border);color:var(--text-dim);}
-  .conn-pill.online{color:#7CFC9A;border-color:rgba(124,252,154,0.3);}
-  .conn-pill.offline{color:var(--ember);border-color:rgba(255,82,82,0.3);}
-  .logout-btn{
-    background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);
-    padding:6px 12px;border-radius:20px;font-size:0.8rem;cursor:pointer;transition:all .2s;
-  }
-  .logout-btn:hover{border-color:var(--ember);color:var(--ember);}
+  .current-chat-label{font-size:0.98rem;font-weight:700;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .current-chat-sub{font-size:0.72rem;color:var(--text-muted);white-space:nowrap;}
+  .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .call-header-btn{background:transparent;border:none;color:var(--text-muted);padding:6px;border-radius:4px;font-size:1.05rem;cursor:pointer;transition:all .15s;}
+  .call-header-btn:hover{background:var(--bg-hover);color:var(--online);}
+  .call-header-btn.video:hover{color:var(--blurple);}
+  .chan-action-btn{background:var(--bg-input);border:none;color:var(--text-normal);padding:6px 10px;border-radius:4px;font-size:0.76rem;font-weight:600;cursor:pointer;transition:all .15s;}
+  .chan-action-btn:hover{background:var(--bg-hover);color:var(--text-bright);}
+  .chan-action-btn.warn:hover{color:var(--gold);}
+  .my-profile-btn{background:none;border:none;padding:0;cursor:pointer;display:none;}
+  .admin-badge{background:#ffd60a;color:#1e1f22;padding:4px 10px;border-radius:4px;font-size:0.7rem;font-weight:700;letter-spacing:0.4px;box-shadow:0 0 0 1px rgba(255,214,10,0.4);}
+  .conn-pill{padding:5px 10px;border-radius:4px;font-size:0.68rem;color:var(--text-muted);background:var(--bg-input);}
+  .conn-pill.online{color:var(--online);}
+  .conn-pill.offline{color:var(--danger);}
+  .logout-btn{background:transparent;border:none;color:var(--text-muted);padding:6px;border-radius:4px;font-size:1rem;cursor:pointer;transition:all .15s;}
+  .logout-btn:hover{background:var(--bg-hover);color:var(--danger);}
 
-  .promo-strip{
-    display:flex;align-items:center;gap:10px;
-    background:linear-gradient(90deg, rgba(255,45,45,0.10), rgba(139,92,246,0.10));
-    border:1px solid var(--panel-border);border-radius:10px;
-    padding:9px 14px;margin:10px 0;font-size:0.82rem;color:var(--text-dim);flex-wrap:wrap;
-  }
-  .promo-strip a{color:var(--shadow-glow);font-weight:600;text-decoration:none;}
+  .promo-strip{display:flex;align-items:center;gap:10px;background:rgba(88,101,242,0.08);border-bottom:1px solid var(--border);padding:8px 16px;font-size:0.8rem;color:var(--text-muted);flex-wrap:wrap;}
+  .promo-strip a{color:#a6b1ff;font-weight:600;text-decoration:none;}
   .promo-strip a:hover{text-decoration:underline;}
 
-  /* ---- voice channel panel (inside group chats) ---- */
-  .voice-panel{
-    display:none;align-items:center;gap:10px;flex-wrap:wrap;
-    padding:10px 12px;margin:0 0 10px;border-radius:10px;
-    background:var(--panel);border:1px solid var(--panel-border);
-  }
+  /* ---- voice channel panel ---- */
+  .voice-panel{display:none;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--border);background:#2b2d31;}
   .voice-panel.show{display:flex;}
-  .voice-panel .voice-join-btn{
-    border:none;border-radius:18px;padding:6px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;
-    background:linear-gradient(135deg,#1f5c34,#2f9451);color:#fff;
-  }
-  .voice-panel .voice-join-btn.leave{background:linear-gradient(135deg,#7a1f1f,var(--ember));}
-  .voice-chip{
-    display:flex;align-items:center;gap:6px;background:#0d0c11;border:1px solid var(--panel-border);
-    border-radius:16px;padding:4px 10px 4px 4px;font-size:0.76rem;color:var(--text-light);
-  }
-  .voice-chip .mic-state{font-size:0.72rem;}
+  .voice-panel .voice-join-btn{border:none;border-radius:4px;padding:7px 14px;font-size:0.8rem;font-weight:600;cursor:pointer;background:var(--online);color:#fff;}
+  .voice-panel .voice-join-btn.leave{background:var(--danger);}
+  .voice-chip{display:flex;align-items:center;gap:6px;background:var(--bg-input);border-radius:16px;padding:4px 10px 4px 4px;font-size:0.76rem;color:var(--text-normal);}
 
-  #messages{flex:1;overflow-y:auto;padding:6px 4px 6px;display:flex;flex-direction:column;gap:12px;}
-  .msg{max-width:78%;display:flex;flex-direction:column;position:relative;}
-  .msg.me{align-self:flex-end;align-items:flex-end;}
-  .msg.other{align-self:flex-start;align-items:flex-start;}
-  .msg .bubble-row{display:flex;align-items:center;gap:6px;}
-  .msg .bubble{
-    padding:9px 14px;border-radius:14px;font-size:0.92rem;line-height:1.4;
-    word-wrap:break-word;white-space:pre-wrap;
-  }
-  .msg.me .bubble{
-    background:linear-gradient(135deg,var(--shadow-purple),var(--shadow-violet));
-    color:#fff;border-bottom-right-radius:4px;box-shadow:0 2px 12px rgba(139,92,246,0.3);
-  }
-  .msg.other .bubble{background:var(--panel);border:1px solid var(--panel-border);border-bottom-left-radius:4px;}
-  .msg .meta{font-size:0.68rem;color:var(--text-dim);margin:4px 6px 0;}
-  .msg .name-row{display:flex;align-items:center;gap:6px;margin-bottom:2px;}
-  .msg-del-btn, .msg-block-btn{
-    background:transparent;border:none;cursor:pointer;font-size:0.8rem;opacity:0.6;padding:2px 4px;
-  }
-  .msg-del-btn{color:var(--ember);}
-  .msg-block-btn{color:var(--text-dim);}
-  .msg-del-btn:hover, .msg-block-btn:hover{opacity:1;}
+  #messages{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:2px;}
+  .msg{display:flex;gap:12px;padding:4px 8px;border-radius:6px;max-width:100%;}
+  .msg:hover{background:rgba(4,4,5,0.15);}
+  .msg .avatar-slot{flex:0 0 auto;width:40px;padding-top:2px;}
+  .msg .msg-body{flex:1;min-width:0;}
+  .msg .name-row{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;}
+  .msg .name-row .who{font-weight:600;font-size:0.9rem;color:var(--text-bright);}
+  .msg .name-row .when{font-size:0.68rem;color:var(--text-faint);}
+  .msg .bubble{font-size:0.92rem;line-height:1.4;word-wrap:break-word;white-space:pre-wrap;color:var(--text-normal);}
+  .msg.me .name-row .who{color:#a6b1ff;}
+  .msg-actions{display:none;gap:2px;margin-left:auto;padding-top:2px;}
+  .msg:hover .msg-actions{display:flex;}
+  .msg-del-btn, .msg-block-btn{background:var(--bg-input);border:none;cursor:pointer;font-size:0.78rem;padding:4px 6px;border-radius:4px;color:var(--text-muted);}
+  .msg-del-btn:hover{color:var(--danger);}
+  .msg-block-btn:hover{color:var(--text-bright);}
 
-  #typingBar{min-height:20px;padding:0 6px;font-size:0.76rem;color:var(--text-dim);font-style:italic;}
+  #typingBar{min-height:22px;padding:0 16px;font-size:0.76rem;color:var(--text-muted);font-style:italic;}
 
-  #composer{display:flex;gap:10px;padding:10px 4px 18px;border-top:1px solid var(--panel-border);}
-  #msgInput{
-    flex:1;padding:12px 15px;border-radius:24px;
-    background:var(--panel);border:1px solid var(--panel-border);
-    color:var(--text-light);font-size:0.94rem;outline:none;font-family:'Inter';
-  }
-  #msgInput:focus{border-color:var(--shadow-violet);}
-  #sendBtn{
-    padding:0 20px;border:none;border-radius:24px;
-    background:linear-gradient(135deg,var(--shadow-purple),var(--shadow-violet));
-    color:#fff;font-weight:600;cursor:pointer;box-shadow:0 4px 16px rgba(139,92,246,0.3);
-  }
-  #sendBtn:disabled{opacity:0.5;cursor:not-allowed;}
-  .empty-state{text-align:center;color:var(--text-dim);margin-top:40px;font-size:0.88rem;}
-  .empty-state .glyph{font-size:2.2rem;display:block;margin-bottom:10px;opacity:0.6;}
+  #composer{display:flex;gap:8px;padding:0 16px 20px;align-items:center;}
+  #attachBtn{flex:0 0 auto;background:var(--bg-input);border:none;color:var(--text-muted);width:40px;height:40px;border-radius:50%;font-size:1.05rem;cursor:pointer;transition:all .15s;}
+  #attachBtn:hover{color:var(--text-bright);background:var(--bg-hover);}
+  .msg-media{max-width:320px;max-height:280px;border-radius:8px;margin-top:6px;display:block;cursor:pointer;}
+  .owner-tag{display:inline-flex;align-items:center;gap:2px;background:#ffd60a;color:#1e1f22;font-size:0.62rem;font-weight:700;padding:1px 6px;border-radius:3px;letter-spacing:0.2px;vertical-align:middle;}
+  .muted-tag{font-size:0.68rem;color:var(--text-faint);}
+  .mini-btn.mute{color:var(--gold);}
+  .mini-btn.ban{color:var(--danger);}
+  #msgInputWrap{flex:1;display:flex;align-items:center;background:var(--bg-input);border-radius:8px;padding:0 12px;}
+  #msgInput{flex:1;padding:12px 8px;background:transparent;border:none;color:var(--text-normal);font-size:0.94rem;outline:none;font-family:'Inter';}
+  #sendBtn{padding:0 16px;border:none;background:transparent;color:var(--blurple);font-weight:600;cursor:pointer;font-size:0.85rem;}
+  #sendBtn:hover{color:var(--blurple-hover);}
+  #sendBtn:disabled{opacity:0.4;cursor:not-allowed;}
+  .empty-state{text-align:center;color:var(--text-muted);margin-top:60px;font-size:0.9rem;}
+  .empty-state .glyph{font-size:2.4rem;display:block;margin-bottom:12px;opacity:0.5;}
+  .composer-note{padding:0 16px 14px;font-size:0.78rem;color:var(--gold);}
 
   /* ---- modal overlay ---- */
-  .modal-overlay{
-    position:fixed;inset:0;z-index:10;background:rgba(5,4,8,0.72);
-    display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);
-  }
+  .modal-overlay{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,0.72);display:none;align-items:center;justify-content:center;padding:20px;}
   .modal-overlay.open{display:flex;}
-  .modal-card{
-    width:100%;max-width:340px;background:var(--panel);border:1px solid var(--panel-border);
-    border-radius:16px;padding:24px 22px 22px;box-shadow:0 10px 50px rgba(0,0,0,0.6);
-    text-align:left;max-height:82vh;display:flex;flex-direction:column;
-  }
-  .modal-card h3{margin:0 0 4px;font-size:1.05rem;color:var(--text-light);}
-  .modal-card p.sub{margin:0 0 16px;font-size:0.78rem;color:var(--text-dim);}
-  .modal-card input{
-    width:100%;padding:11px 13px;border-radius:9px;
-    background:#0d0c11;border:1px solid var(--panel-border);
-    color:var(--text-light);font-size:0.95rem;outline:none;margin-bottom:12px;flex:0 0 auto;
-  }
-  .modal-card input:focus{border-color:var(--shadow-violet);}
+  .modal-card{width:100%;max-width:360px;background:var(--bg-chat);border-radius:8px;padding:24px 22px;box-shadow:0 12px 44px rgba(0,0,0,0.5);text-align:left;max-height:82vh;display:flex;flex-direction:column;}
+  .modal-card h3{margin:0 0 4px;font-size:1.1rem;color:var(--text-bright);}
+  .modal-card p.sub{margin:0 0 16px;font-size:0.8rem;color:var(--text-muted);}
+  .modal-card input{width:100%;padding:10px 11px;border-radius:4px;background:#1e1f22;border:1px solid var(--border);color:var(--text-normal);font-size:0.95rem;outline:none;margin-bottom:12px;flex:0 0 auto;}
+  .modal-card input:focus{border-color:var(--blurple);}
   .modal-actions{display:flex;gap:10px;margin-top:4px;flex:0 0 auto;}
   .modal-actions button{flex:1;}
-  .modal-err{min-height:16px;font-size:0.78rem;color:var(--ember);margin:-4px 0 10px;flex:0 0 auto;}
-  .member-picker{overflow-y:auto;flex:1;margin-bottom:10px;border-top:1px solid var(--panel-border);border-bottom:1px solid var(--panel-border);padding:8px 0;}
-  .member-row{display:flex;align-items:center;gap:9px;padding:7px 4px;font-size:0.86rem;cursor:pointer;}
+  .modal-err{min-height:16px;font-size:0.78rem;color:var(--danger);margin:-4px 0 10px;flex:0 0 auto;}
+  .modal-err.ok{color:var(--online);}
+  .member-picker{overflow-y:auto;flex:1;margin-bottom:10px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 0;min-height:60px;}
+  .member-row{display:flex;align-items:center;gap:9px;padding:7px 4px;font-size:0.86rem;cursor:pointer;color:var(--text-normal);}
   .member-row input{width:auto;margin:0;flex:0 0 auto;}
   .member-row span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .inline-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+  .inline-row input{margin-bottom:0;}
+  .inline-row button{border:none;border-radius:4px;background:var(--blurple);color:#fff;font-weight:600;font-size:0.8rem;padding:10px 14px;cursor:pointer;white-space:nowrap;}
+  .inline-row button:hover{background:var(--blurple-hover);}
+  .type-choice{display:flex;gap:8px;margin-bottom:14px;}
+  .type-choice button{flex:1;padding:9px 6px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-weight:600;font-size:0.78rem;cursor:pointer;font-family:'Inter';}
+  .type-choice button.active{background:var(--blurple);border-color:var(--blurple);color:#fff;}
+  .code-box{font-family:'JetBrains Mono',monospace;font-size:1.5rem;letter-spacing:4px;text-align:center;background:#1e1f22;border:1px solid var(--border);border-radius:6px;padding:16px;color:var(--text-bright);margin-bottom:12px;user-select:all;}
+  .modal-note{font-size:0.75rem;color:var(--text-faint);margin:0 0 12px;}
 
   /* ---- search bar ---- */
-  .search-btn{
-    background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);
-    padding:6px 10px;border-radius:20px;font-size:0.85rem;cursor:pointer;transition:all .2s;
-  }
-  .search-btn:hover{border-color:var(--shadow-violet);color:var(--text-light);}
-  .search-btn.active{border-color:var(--shadow-violet);color:var(--shadow-glow);background:rgba(139,92,246,0.1);}
-  #searchBar{display:none;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--panel-border);}
+  .search-btn{background:transparent;border:none;color:var(--text-muted);padding:6px;border-radius:4px;font-size:1.05rem;cursor:pointer;transition:all .15s;}
+  .search-btn:hover, .search-btn.active{background:var(--bg-hover);color:var(--text-bright);}
+  #searchBar{display:none;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg-input);}
   #searchBar.open{display:flex;}
-  #searchInput{
-    flex:1;padding:9px 13px;border-radius:20px;
-    background:var(--panel);border:1px solid var(--panel-border);
-    color:var(--text-light);font-size:0.88rem;outline:none;font-family:'Inter';
-  }
-  #searchInput:focus{border-color:var(--shadow-violet);}
-  #searchCount{font-size:0.75rem;color:var(--text-dim);white-space:nowrap;min-width:56px;text-align:right;}
-  .search-close-btn{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:0.95rem;padding:2px 4px;}
-  .search-close-btn:hover{color:var(--ember);}
-  mark.hl{background:rgba(224,185,92,0.35);color:inherit;border-radius:3px;padding:0 1px;}
-  .msg.dimmed{opacity:0.25;}
+  #searchInput{flex:1;padding:8px 12px;border-radius:4px;background:#1e1f22;border:1px solid var(--border);color:var(--text-normal);font-size:0.86rem;outline:none;font-family:'Inter';}
+  #searchInput:focus{border-color:var(--blurple);}
+  #searchCount{font-size:0.74rem;color:var(--text-muted);white-space:nowrap;min-width:56px;text-align:right;}
+  .search-close-btn{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem;padding:2px 4px;}
+  .search-close-btn:hover{color:var(--danger);}
+  mark.hl{background:rgba(240,178,50,0.4);color:inherit;border-radius:2px;padding:0 1px;}
+  .msg.dimmed{opacity:0.28;}
 
   /* ---- calling overlays ---- */
-  .call-overlay{
-    position:fixed;inset:0;z-index:30;background:rgba(4,3,7,0.88);
-    display:none;align-items:center;justify-content:center;flex-direction:column;
-    backdrop-filter:blur(4px);text-align:center;padding:24px;
-  }
+  .call-overlay{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;}
   .call-overlay.open{display:flex;}
-  .call-avatar{
-    width:96px;height:96px;border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, var(--shadow-glow), var(--shadow-purple) 70%);
-    display:flex;align-items:center;justify-content:center;font-size:2.1rem;color:#fff;
-    animation:pulseRing 1.6s ease-out infinite;margin-bottom:18px;
-  }
-  @keyframes pulseRing{
-    0%{box-shadow:0 0 0 0 rgba(139,92,246,0.55);}
-    70%{box-shadow:0 0 0 26px rgba(139,92,246,0);}
-    100%{box-shadow:0 0 0 0 rgba(139,92,246,0);}
-  }
-  .call-peer-name{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--text-light);margin-bottom:4px;}
-  .call-status-text{color:var(--text-dim);font-size:0.9rem;margin-bottom:26px;}
+  .call-avatar{width:100px;height:100px;border-radius:50%;background:var(--blurple);display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:#fff;animation:pulseRing 1.6s ease-out infinite;margin-bottom:18px;}
+  @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(88,101,242,0.55);}70%{box-shadow:0 0 0 28px rgba(88,101,242,0);}100%{box-shadow:0 0 0 0 rgba(88,101,242,0);}}
+  .call-peer-name{font-size:1.5rem;font-weight:700;color:var(--text-bright);margin-bottom:4px;}
+  .call-status-text{color:var(--text-muted);font-size:0.9rem;margin-bottom:28px;}
   .call-btn-row{display:flex;gap:22px;}
-  .round-btn{
-    width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;font-size:1.4rem;transition:transform .15s;
-  }
+  .round-btn{width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem;transition:transform .15s;}
   .round-btn:hover{transform:translateY(-2px);}
-  .round-btn.accept{background:linear-gradient(135deg,#1f5c34,#2f9451);color:#fff;}
-  .round-btn.decline, .round-btn.hangup{background:linear-gradient(135deg,#7a1f1f,var(--ember));color:#fff;}
-  .round-btn.mute{background:var(--panel);border:1px solid var(--panel-border);color:var(--text-light);}
-  .round-btn.mute.active{background:var(--ember);color:#fff;}
-  .round-btn.vidtoggle{background:var(--panel);border:1px solid var(--panel-border);color:var(--text-light);}
-  .round-btn.vidtoggle.active{background:var(--shadow-violet);color:#fff;}
+  .round-btn.accept{background:var(--online);color:#fff;}
+  .round-btn.decline, .round-btn.hangup{background:var(--danger);color:#fff;}
+  .round-btn.mute{background:var(--bg-input);border:1px solid var(--border);color:var(--text-normal);}
+  .round-btn.mute.active{background:var(--danger);color:#fff;}
+  .round-btn.vidtoggle{background:var(--bg-input);border:1px solid var(--border);color:var(--text-normal);}
+  .round-btn.vidtoggle.active{background:var(--blurple);color:#fff;}
 
   #inCallOverlay{justify-content:flex-end;}
   .in-call-videos{position:relative;width:100%;max-width:640px;flex:1;display:flex;align-items:center;justify-content:center;}
-  #remoteVideoEl{width:100%;max-height:60vh;border-radius:16px;background:#0d0c11;object-fit:cover;border:1px solid var(--panel-border);}
-  #localVideoEl{position:absolute;bottom:12px;right:12px;width:110px;border-radius:10px;border:1px solid var(--panel-border);background:#0d0c11;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+  #remoteVideoEl{width:100%;max-height:60vh;border-radius:12px;background:#1e1f22;object-fit:cover;border:1px solid var(--border);}
+  #localVideoEl{position:absolute;bottom:12px;right:12px;width:110px;border-radius:8px;border:1px solid var(--border);background:#1e1f22;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
   .in-call-audio-mode #remoteVideoEl, .in-call-audio-mode #localVideoEl{display:none;}
-  .call-timer{color:var(--text-dim);font-size:0.82rem;margin:14px 0 18px;}
+  .call-timer{color:var(--text-muted);font-size:0.82rem;margin:14px 0 18px;}
 
+  /* ---- online users panel (right side) ---- */
+  #onlineCol{width:220px;flex:0 0 auto;background:var(--bg-list);border-left:1px solid var(--border);display:flex;flex-direction:column;min-height:0;}
+  #onlineColHeader{padding:16px 16px 8px;font-size:0.68rem;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:var(--text-muted);}
+  #onlineColScroll{flex:1;overflow-y:auto;padding:0 8px 12px;}
+  .online-item{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:0.85rem;color:var(--text-normal);margin-bottom:1px;position:relative;}
+  .online-item:hover{background:var(--bg-hover);}
+  .online-item .item-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .online-item .you-tag{font-size:0.68rem;color:var(--text-faint);}
+  .online-empty-note{color:var(--text-faint);font-size:0.78rem;padding:10px 8px;text-align:center;}
+
+  @media (max-width: 860px){
+    #serverRail{display:none;}
+    #onlineCol{display:none;}
+  }
   @media (max-width: 720px){
-    #chatScreen{padding:10px 10px 0;}
-    #sidebar{
-      position:fixed;top:0;left:0;bottom:0;width:250px;z-index:8;
-      background:var(--bg-black);padding:14px 14px 10px;border-right:1px solid var(--panel-border);
-      transform:translateX(-100%);transition:transform .2s ease;
-    }
-    #sidebar.mobile-open{transform:translateX(0);}
+    #chanCol{position:fixed;top:0;left:0;bottom:0;width:250px;z-index:8;transform:translateX(-100%);transition:transform .2s ease;}
+    #chanCol.mobile-open{transform:translateX(0);}
     .sidebar-toggle-btn{display:inline-flex;}
+    .my-profile-btn{display:inline-flex;}
+    .list-item .mini-btn{opacity:0.7;}
   }
 &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
 &lt;div id=&quot;app&quot;&gt;
-  &lt;div class=&quot;fog-layer&quot;&gt;&lt;/div&gt;
-  &lt;div class=&quot;shadow-blob&quot; style=&quot;width:280px;height:280px;top:10%;left:8%;&quot;&gt;&lt;/div&gt;
-  &lt;div class=&quot;shadow-blob&quot; style=&quot;width:220px;height:220px;bottom:8%;right:10%;animation-delay:3s;&quot;&gt;&lt;/div&gt;
 
   &lt;!-- AUTH SCREEN --&gt;
   &lt;div id=&quot;authScreen&quot;&gt;
-    &lt;div class=&quot;logo&quot;&gt;🌑 SHADOW CHAT&lt;/div&gt;
-    &lt;div class=&quot;tagline&quot;&gt;Speak freely. The dark keeps your words.&lt;/div&gt;
+    &lt;div class=&quot;logo-mark&quot;&gt;B&lt;/div&gt;
+    &lt;div class=&quot;logo-word&quot;&gt;Bored Chat&lt;/div&gt;
+    &lt;div class=&quot;tagline&quot;&gt;Where your crew hangs out.&lt;/div&gt;
 
     &lt;div class=&quot;auth-card&quot;&gt;
       &lt;div class=&quot;tabs&quot;&gt;
@@ -513,13 +337,13 @@
       &lt;form id=&quot;authForm&quot; onsubmit=&quot;handleAuthSubmit(event)&quot;&gt;
         &lt;div class=&quot;field&quot;&gt;
           &lt;label&gt;Username&lt;/label&gt;
-          &lt;input type=&quot;text&quot; id=&quot;usernameInput&quot; autocomplete=&quot;username&quot; required=&quot;&quot; maxlength=&quot;20&quot; placeholder=&quot;e.g. nightwalker&quot;&gt;
+          &lt;input type=&quot;text&quot; id=&quot;usernameInput&quot; autocomplete=&quot;username&quot; required=&quot;&quot; maxlength=&quot;20&quot; placeholder=&quot;e.g. nightowl&quot;&gt;
         &lt;/div&gt;
         &lt;div class=&quot;field&quot;&gt;
           &lt;label&gt;Password&lt;/label&gt;
           &lt;input type=&quot;password&quot; id=&quot;passwordInput&quot; autocomplete=&quot;current-password&quot; required=&quot;&quot; minlength=&quot;4&quot; placeholder=&quot;••••••••&quot;&gt;
         &lt;/div&gt;
-        &lt;button type=&quot;submit&quot; class=&quot;primary-btn&quot; id=&quot;submitBtn&quot;&gt;Enter the Shadows&lt;/button&gt;
+        &lt;button type=&quot;submit&quot; class=&quot;primary-btn&quot; id=&quot;submitBtn&quot;&gt;Continue&lt;/button&gt;
         &lt;div class=&quot;auth-msg&quot; id=&quot;authMsg&quot;&gt;&lt;/div&gt;
       &lt;/form&gt;
     &lt;/div&gt;
@@ -533,25 +357,29 @@
   &lt;!-- CHAT SCREEN --&gt;
   &lt;div id=&quot;chatScreen&quot;&gt;
 
-    &lt;!-- SIDEBAR --&gt;
-    &lt;div id=&quot;sidebar&quot;&gt;
-      &lt;div class=&quot;voice-status-bar&quot; id=&quot;voiceStatusBar&quot;&gt;
-        🎙️ &lt;span class=&quot;vname&quot; id=&quot;voiceStatusName&quot;&gt;&lt;/span&gt;
-        &lt;button onclick=&quot;leaveVoiceChannel()&quot;&gt;Leave&lt;/button&gt;
-      &lt;/div&gt;
+    &lt;!-- SERVER RAIL --&gt;
+    &lt;div id=&quot;serverRail&quot;&gt;
+      &lt;div class=&quot;rail-icon active&quot; title=&quot;Bored Chat&quot; onclick=&quot;openGeneralChat()&quot;&gt;B&lt;/div&gt;
+      &lt;div class=&quot;rail-divider&quot;&gt;&lt;/div&gt;
+    &lt;/div&gt;
 
-      &lt;div class=&quot;general-nav-btn&quot; id=&quot;generalNavBtn&quot; onclick=&quot;openGeneralChat()&quot;&gt;
-        &lt;span&gt;🌐&lt;/span&gt;&lt;span&gt;General&lt;/span&gt;
-      &lt;/div&gt;
+    &lt;!-- CHANNEL COLUMN --&gt;
+    &lt;div id=&quot;chanCol&quot;&gt;
+      &lt;div id=&quot;chanColHeader&quot;&gt;Bored Chat&lt;/div&gt;
 
       &lt;div class=&quot;sidebar-tabs&quot;&gt;
         &lt;button class=&quot;sidebar-tab-btn active&quot; id=&quot;sidebarTabFriends&quot; onclick=&quot;switchSidebarTab('friends')&quot;&gt;Friends&lt;span class=&quot;badge-dot&quot; id=&quot;incomingReqBadge&quot; style=&quot;display:none;&quot;&gt;&lt;/span&gt;&lt;/button&gt;
-        &lt;button class=&quot;sidebar-tab-btn&quot; id=&quot;sidebarTabGroups&quot; onclick=&quot;switchSidebarTab('groups')&quot;&gt;Groups&lt;/button&gt;
+        &lt;button class=&quot;sidebar-tab-btn&quot; id=&quot;sidebarTabGroups&quot; onclick=&quot;switchSidebarTab('groups')&quot;&gt;Channels&lt;/button&gt;
       &lt;/div&gt;
 
       &lt;div id=&quot;panelScroll&quot;&gt;
         &lt;!-- FRIENDS PANEL --&gt;
         &lt;div id=&quot;friendsPanel&quot;&gt;
+          &lt;div class=&quot;general-nav-btn-wrap&quot; style=&quot;padding:0 8px 6px;&quot;&gt;
+            &lt;div class=&quot;list-item&quot; id=&quot;generalNavBtn&quot; onclick=&quot;openGeneralChat()&quot; style=&quot;margin:0 0 6px;&quot;&gt;
+              &lt;span class=&quot;hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;item-name&quot;&gt;general&lt;/span&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
           &lt;div class=&quot;add-friend-row&quot;&gt;
             &lt;input type=&quot;text&quot; id=&quot;addFriendInput&quot; placeholder=&quot;Add friend by username…&quot; maxlength=&quot;20&quot; onkeydown=&quot;if(event.key==='Enter')sendFriendRequestFromInput()&quot;&gt;
             &lt;button onclick=&quot;sendFriendRequestFromInput()&quot;&gt;Add&lt;/button&gt;
@@ -567,23 +395,58 @@
             &lt;div id=&quot;outgoingRequestsList&quot;&gt;&lt;/div&gt;
           &lt;/div&gt;
 
-          &lt;div class=&quot;sidebar-section-title&quot;&gt;&lt;span&gt;Friends&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;sidebar-section-title&quot;&gt;&lt;span&gt;Direct Messages&lt;/span&gt;&lt;/div&gt;
           &lt;div id=&quot;friendsList&quot;&gt;&lt;/div&gt;
 
           &lt;div id=&quot;blockedBlock&quot; style=&quot;display:none;&quot;&gt;
             &lt;div class=&quot;sidebar-section-title&quot;&gt;&lt;span&gt;Blocked&lt;/span&gt;&lt;/div&gt;
             &lt;div id=&quot;blockedList&quot;&gt;&lt;/div&gt;
           &lt;/div&gt;
+
+          &lt;div id=&quot;modBlock&quot; style=&quot;display:none;&quot;&gt;
+            &lt;div class=&quot;sidebar-section-title&quot;&gt;&lt;span&gt;Muted&lt;/span&gt;&lt;/div&gt;
+            &lt;div id=&quot;mutedAdminList&quot;&gt;&lt;/div&gt;
+            &lt;div class=&quot;sidebar-section-title&quot;&gt;&lt;span&gt;Banned&lt;/span&gt;&lt;/div&gt;
+            &lt;div id=&quot;bannedAdminList&quot;&gt;&lt;/div&gt;
+          &lt;/div&gt;
         &lt;/div&gt;
 
         &lt;!-- GROUPS PANEL --&gt;
         &lt;div id=&quot;groupsPanel&quot; style=&quot;display:none;&quot;&gt;
+          &lt;div class=&quot;add-friend-row&quot; style=&quot;margin-top:4px;&quot;&gt;
+            &lt;input type=&quot;text&quot; id=&quot;joinCodeInput&quot; placeholder=&quot;Join with an invite code…&quot; maxlength=&quot;12&quot; onkeydown=&quot;if(event.key==='Enter')joinChannelByCode()&quot;&gt;
+            &lt;button onclick=&quot;joinChannelByCode()&quot;&gt;Join&lt;/button&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;add-friend-msg&quot; id=&quot;joinCodeMsg&quot;&gt;&lt;/div&gt;
+
+          &lt;div id=&quot;publicChannelsBlock&quot;&gt;
+            &lt;div class=&quot;sidebar-section-title&quot;&gt;&lt;span&gt;Public Channels&lt;/span&gt;&lt;/div&gt;
+            &lt;div id=&quot;publicChannelsList&quot;&gt;&lt;/div&gt;
+          &lt;/div&gt;
+
           &lt;div class=&quot;sidebar-section-title&quot;&gt;
-            &lt;span&gt;Group Chats&lt;/span&gt;
-            &lt;button class=&quot;new-group-btn&quot; onclick=&quot;openNewGroupModal()&quot;&gt;+ New&lt;/button&gt;
+            &lt;span&gt;Your Channels&lt;/span&gt;
+            &lt;button class=&quot;new-group-btn&quot; onclick=&quot;openNewGroupModal()&quot; title=&quot;Create channel&quot;&gt;+&lt;/button&gt;
           &lt;/div&gt;
           &lt;div id=&quot;groupsList&quot;&gt;&lt;/div&gt;
         &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;voice-status-bar&quot; id=&quot;voiceStatusBar&quot;&gt;
+        🎙️ &lt;span class=&quot;vname&quot; id=&quot;voiceStatusName&quot;&gt;&lt;/span&gt;
+        &lt;button onclick=&quot;leaveVoiceChannel()&quot;&gt;Leave&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;div id=&quot;userBar&quot;&gt;
+        &lt;div class=&quot;user-block&quot; onclick=&quot;openProfileModal()&quot;&gt;
+          &lt;span id=&quot;currentUserAvatarSlot&quot;&gt;&lt;/span&gt;
+          &lt;div class=&quot;user-info&quot;&gt;
+            &lt;b id=&quot;userBarName&quot;&gt;&lt;/b&gt;
+            &lt;span id=&quot;userBarStatus&quot;&gt;Online&lt;/span&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;span class=&quot;admin-badge&quot; id=&quot;adminBadge&quot; style=&quot;display:none;&quot;&gt;👑 OWNER&lt;/span&gt;
+        &lt;button class=&quot;bar-icon-btn&quot; onclick=&quot;logout()&quot; title=&quot;Log out&quot;&gt;⏻&lt;/button&gt;
       &lt;/div&gt;
     &lt;/div&gt;
 
@@ -592,33 +455,31 @@
       &lt;div class=&quot;chat-header&quot;&gt;
         &lt;div class=&quot;header-left&quot;&gt;
           &lt;button class=&quot;sidebar-toggle-btn&quot; onclick=&quot;toggleSidebarMobile()&quot;&gt;☰&lt;/button&gt;
-          &lt;div class=&quot;logo&quot;&gt;🌑 SHADOW CHAT&lt;/div&gt;
           &lt;div class=&quot;current-chat-label-wrap&quot;&gt;
             &lt;span class=&quot;current-chat-label&quot; id=&quot;currentChatLabel&quot;&gt;&lt;/span&gt;
             &lt;span class=&quot;current-chat-sub&quot; id=&quot;currentChatSub&quot;&gt;&lt;/span&gt;
           &lt;/div&gt;
         &lt;/div&gt;
         &lt;div class=&quot;header-right&quot;&gt;
-          &lt;button class=&quot;call-header-btn&quot; id=&quot;headerCallAudioBtn&quot; style=&quot;display:none;&quot; onclick=&quot;startCallWithCurrentFriend('audio')&quot; title=&quot;Voice call&quot;&gt;📞 Call&lt;/button&gt;
-          &lt;button class=&quot;call-header-btn video&quot; id=&quot;headerCallVideoBtn&quot; style=&quot;display:none;&quot; onclick=&quot;startCallWithCurrentFriend('video')&quot; title=&quot;Video call&quot;&gt;🎥 Video&lt;/button&gt;
-          &lt;button class=&quot;search-btn&quot; id=&quot;searchToggleBtn&quot; onclick=&quot;toggleSearch()&quot; title=&quot;Search messages&quot;&gt;🔍 Search&lt;/button&gt;
+          &lt;button class=&quot;chan-action-btn&quot; id=&quot;headerAddPeopleBtn&quot; style=&quot;display:none;&quot; onclick=&quot;openAddMemberModal()&quot;&gt;+ Add people&lt;/button&gt;
+          &lt;button class=&quot;chan-action-btn&quot; id=&quot;headerInviteBtn&quot; style=&quot;display:none;&quot; onclick=&quot;openInviteModal()&quot;&gt;🔗 Invite code&lt;/button&gt;
+          &lt;button class=&quot;chan-action-btn warn&quot; id=&quot;headerLeaveBtn&quot; style=&quot;display:none;&quot; onclick=&quot;leaveCurrentChannel()&quot;&gt;Leave&lt;/button&gt;
+          &lt;button class=&quot;call-header-btn&quot; id=&quot;headerCallAudioBtn&quot; style=&quot;display:none;&quot; onclick=&quot;startCallWithCurrentFriend('audio')&quot; title=&quot;Voice call&quot;&gt;📞&lt;/button&gt;
+          &lt;button class=&quot;call-header-btn video&quot; id=&quot;headerCallVideoBtn&quot; style=&quot;display:none;&quot; onclick=&quot;startCallWithCurrentFriend('video')&quot; title=&quot;Video call&quot;&gt;🎥&lt;/button&gt;
+          &lt;button class=&quot;search-btn&quot; id=&quot;searchToggleBtn&quot; onclick=&quot;toggleSearch()&quot; title=&quot;Search messages&quot;&gt;🔍&lt;/button&gt;
           &lt;span class=&quot;conn-pill&quot; id=&quot;connPill&quot;&gt;connecting…&lt;/span&gt;
-          &lt;span class=&quot;admin-badge&quot; id=&quot;adminBadge&quot; style=&quot;display:none;&quot;&gt;⚡ ADMIN&lt;/span&gt;
-          &lt;button class=&quot;my-profile-btn&quot; onclick=&quot;openProfileModal()&quot; title=&quot;Profile picture&quot;&gt;
-            &lt;span class=&quot;user-pill&quot; id=&quot;currentUserPill&quot;&gt;&lt;/span&gt;
-          &lt;/button&gt;
-          &lt;button class=&quot;logout-btn&quot; onclick=&quot;logout()&quot;&gt;Log Out&lt;/button&gt;
+          &lt;button class=&quot;my-profile-btn&quot; onclick=&quot;openProfileModal()&quot; title=&quot;Profile&quot;&gt;👤&lt;/button&gt;
         &lt;/div&gt;
       &lt;/div&gt;
 
       &lt;div id=&quot;searchBar&quot;&gt;
-        &lt;input type=&quot;text&quot; id=&quot;searchInput&quot; placeholder=&quot;Search this chat's messages…&quot; oninput=&quot;handleSearchInput()&quot;&gt;
+        &lt;input type=&quot;text&quot; id=&quot;searchInput&quot; placeholder=&quot;Search this channel…&quot; oninput=&quot;handleSearchInput()&quot;&gt;
         &lt;span id=&quot;searchCount&quot;&gt;&lt;/span&gt;
         &lt;button class=&quot;search-close-btn&quot; onclick=&quot;closeSearch()&quot; title=&quot;Close search&quot;&gt;✕&lt;/button&gt;
       &lt;/div&gt;
 
       &lt;div class=&quot;promo-strip&quot;&gt;
-        🎥 Enjoying the vibe? Check out
+        🎥 Enjoying Bored Chat? Check out
         &lt;a href=&quot;https://www.youtube.com/@ShadowDefender2&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;ShadowDefender2 on YouTube&lt;/a&gt; and subscribe.
       &lt;/div&gt;
 
@@ -629,25 +490,42 @@
 
       &lt;div id=&quot;messages&quot;&gt;&lt;/div&gt;
       &lt;div id=&quot;typingBar&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;composer-note&quot; id=&quot;composerNote&quot; style=&quot;display:none;&quot;&gt;You're muted, so you can't send messages right now.&lt;/div&gt;
 
       &lt;div id=&quot;composer&quot;&gt;
-        &lt;input type=&quot;text&quot; id=&quot;msgInput&quot; placeholder=&quot;Whisper into the dark...&quot; maxlength=&quot;500&quot; onkeydown=&quot;if(event.key==='Enter')sendMessage()&quot; oninput=&quot;handleTypingInput()&quot;&gt;
-        &lt;button id=&quot;sendBtn&quot; onclick=&quot;sendMessage()&quot;&gt;Send&lt;/button&gt;
+        &lt;button id=&quot;attachBtn&quot; onclick=&quot;openAttachMediaModal()&quot; title=&quot;Send an image or video&quot;&gt;📎&lt;/button&gt;
+        &lt;div id=&quot;msgInputWrap&quot;&gt;
+          &lt;input type=&quot;text&quot; id=&quot;msgInput&quot; placeholder=&quot;Message…&quot; maxlength=&quot;500&quot; onkeydown=&quot;if(event.key==='Enter')sendMessage()&quot; oninput=&quot;handleTypingInput()&quot;&gt;
+          &lt;button id=&quot;sendBtn&quot; onclick=&quot;sendMessage()&quot;&gt;Send&lt;/button&gt;
+        &lt;/div&gt;
       &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- ONLINE USERS PANEL --&gt;
+    &lt;div id=&quot;onlineCol&quot;&gt;
+      &lt;div id=&quot;onlineColHeader&quot;&gt;Online — &lt;span id=&quot;onlineCount&quot;&gt;0&lt;/span&gt;&lt;/div&gt;
+      &lt;div id=&quot;onlineColScroll&quot;&gt;&lt;/div&gt;
     &lt;/div&gt;
   &lt;/div&gt;
 
-  &lt;!-- NEW GROUP MODAL --&gt;
+  &lt;!-- NEW CHANNEL MODAL --&gt;
   &lt;div class=&quot;modal-overlay&quot; id=&quot;newGroupModal&quot;&gt;
     &lt;div class=&quot;modal-card&quot;&gt;
-      &lt;h3&gt;Create a Group Chat&lt;/h3&gt;
-      &lt;p class=&quot;sub&quot;&gt;Private, invite-only, no codes — pick friends to add.&lt;/p&gt;
-      &lt;input type=&quot;text&quot; id=&quot;newGroupName&quot; maxlength=&quot;24&quot; placeholder=&quot;Group name&quot;&gt;
-      &lt;div class=&quot;member-picker&quot; id=&quot;newGroupMemberPicker&quot;&gt;&lt;/div&gt;
+      &lt;h3&gt;Create a Channel&lt;/h3&gt;
+      &lt;p class=&quot;sub&quot;&gt;Anyone in a channel can invite more people later.&lt;/p&gt;
+      &lt;div class=&quot;type-choice&quot; id=&quot;newGroupTypeChoice&quot; style=&quot;display:none;&quot;&gt;
+        &lt;button id=&quot;typeBtnPrivate&quot; class=&quot;active&quot; onclick=&quot;setNewChannelType('group')&quot;&gt;Invite only&lt;/button&gt;
+        &lt;button id=&quot;typeBtnPublic&quot; onclick=&quot;setNewChannelType('public')&quot;&gt;Public (like #general)&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;input type=&quot;text&quot; id=&quot;newGroupName&quot; maxlength=&quot;24&quot; placeholder=&quot;Channel name&quot;&gt;
+      &lt;div id=&quot;newGroupPickerWrap&quot;&gt;
+        &lt;div class=&quot;member-picker&quot; id=&quot;newGroupMemberPicker&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;p class=&quot;modal-note&quot; id=&quot;newGroupNote&quot;&gt;You'll get an invite code once it's created, so you can add people who aren't friends yet.&lt;/p&gt;
       &lt;div class=&quot;modal-err&quot; id=&quot;newGroupErr&quot;&gt;&lt;/div&gt;
       &lt;div class=&quot;modal-actions&quot;&gt;
         &lt;button class=&quot;ghost-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;closeNewGroupModal()&quot;&gt;Cancel&lt;/button&gt;
-        &lt;button class=&quot;primary-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;submitNewGroup()&quot;&gt;Create&lt;/button&gt;
+        &lt;button class=&quot;primary-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;submitNewGroup()&quot;&gt;Create channel&lt;/button&gt;
       &lt;/div&gt;
     &lt;/div&gt;
   &lt;/div&gt;
@@ -655,13 +533,34 @@
   &lt;!-- ADD MEMBER MODAL --&gt;
   &lt;div class=&quot;modal-overlay&quot; id=&quot;addMemberModal&quot;&gt;
     &lt;div class=&quot;modal-card&quot;&gt;
-      &lt;h3&gt;Add a Friend to Group&lt;/h3&gt;
-      &lt;p class=&quot;sub&quot;&gt;Only your friends who aren't already in the group are shown.&lt;/p&gt;
+      &lt;h3&gt;Add people&lt;/h3&gt;
+      &lt;p class=&quot;sub&quot;&gt;Add anyone by username, or tick friends from the list.&lt;/p&gt;
+      &lt;div class=&quot;inline-row&quot;&gt;
+        &lt;input type=&quot;text&quot; id=&quot;addByUsernameInput&quot; placeholder=&quot;Username&quot; maxlength=&quot;20&quot; onkeydown=&quot;if(event.key==='Enter')addMemberByUsername()&quot;&gt;
+        &lt;button onclick=&quot;addMemberByUsername()&quot;&gt;Add&lt;/button&gt;
+      &lt;/div&gt;
       &lt;div class=&quot;member-picker&quot; id=&quot;addMemberPicker&quot;&gt;&lt;/div&gt;
       &lt;div class=&quot;modal-err&quot; id=&quot;addMemberErr&quot;&gt;&lt;/div&gt;
       &lt;div class=&quot;modal-actions&quot;&gt;
-        &lt;button class=&quot;ghost-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;closeAddMemberModal()&quot;&gt;Cancel&lt;/button&gt;
-        &lt;button class=&quot;primary-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;submitAddMembers()&quot;&gt;Add Selected&lt;/button&gt;
+        &lt;button class=&quot;ghost-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;closeAddMemberModal()&quot;&gt;Done&lt;/button&gt;
+        &lt;button class=&quot;primary-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;submitAddMembers()&quot;&gt;Add selected&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- INVITE CODE MODAL --&gt;
+  &lt;div class=&quot;modal-overlay&quot; id=&quot;inviteModal&quot;&gt;
+    &lt;div class=&quot;modal-card&quot;&gt;
+      &lt;h3&gt;Invite code&lt;/h3&gt;
+      &lt;p class=&quot;sub&quot;&gt;Anyone with this code can join the channel — they don't need to be your friend.&lt;/p&gt;
+      &lt;div class=&quot;code-box&quot; id=&quot;inviteCodeBox&quot;&gt;------&lt;/div&gt;
+      &lt;div class=&quot;modal-err&quot; id=&quot;inviteErr&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;modal-actions&quot;&gt;
+        &lt;button class=&quot;ghost-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;copyInviteCode()&quot;&gt;Copy code&lt;/button&gt;
+        &lt;button class=&quot;ghost-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;regenerateInviteCode()&quot;&gt;New code&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;modal-actions&quot;&gt;
+        &lt;button class=&quot;primary-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;closeInviteModal()&quot;&gt;Done&lt;/button&gt;
       &lt;/div&gt;
     &lt;/div&gt;
   &lt;/div&gt;
@@ -676,6 +575,21 @@
       &lt;div class=&quot;modal-actions&quot;&gt;
         &lt;button class=&quot;ghost-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;closeProfileModal()&quot;&gt;Cancel&lt;/button&gt;
         &lt;button class=&quot;primary-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;submitProfileAvatar()&quot;&gt;Save&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- ATTACH MEDIA MODAL --&gt;
+  &lt;div class=&quot;modal-overlay&quot; id=&quot;attachMediaModal&quot;&gt;
+    &lt;div class=&quot;modal-card&quot;&gt;
+      &lt;h3&gt;Send an Image or Video&lt;/h3&gt;
+      &lt;p class=&quot;sub&quot;&gt;Paste a direct link to an image or video file. An optional caption goes with it.&lt;/p&gt;
+      &lt;input type=&quot;text&quot; id=&quot;attachMediaUrl&quot; placeholder=&quot;https://example.com/photo.jpg&quot;&gt;
+      &lt;input type=&quot;text&quot; id=&quot;attachMediaCaption&quot; placeholder=&quot;Caption (optional)&quot; maxlength=&quot;500&quot;&gt;
+      &lt;div class=&quot;modal-err&quot; id=&quot;attachMediaErr&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;modal-actions&quot;&gt;
+        &lt;button class=&quot;ghost-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;closeAttachMediaModal()&quot;&gt;Cancel&lt;/button&gt;
+        &lt;button class=&quot;primary-btn&quot; style=&quot;margin-top:0;&quot; onclick=&quot;submitAttachMedia()&quot;&gt;Send&lt;/button&gt;
       &lt;/div&gt;
     &lt;/div&gt;
   &lt;/div&gt;
@@ -723,7 +637,8 @@
 
 &lt;script&gt;
 /* =========================================================
-   FIREBASE CONFIG
+   FIREBASE CONFIG — replace with your own project's config
+   (console.firebase.google.com → Project settings → your app)
 ========================================================= */
 const firebaseConfig = {
   apiKey: &quot;AIzaSyCqfKnFXqgOpw2PDZe99ceLidTPahj-gCM&quot;,
@@ -743,11 +658,11 @@ const db = firebase.database();
    NOTE: this check lives in client-side JS shipped to every
    visitor's browser — viewing page source reveals it. It's a
    convenience switch for you, not a real secret. Admin can
-   moderate General and group chats but never sees anyone's
-   private 1:1 DMs.
+   moderate #general and channels but never sees anyone's
+   private DMs.
 ========================================================= */
-const ADMIN_USERNAME = 'shadowsmp';
-const ADMIN_PASSWORD = 'HackerEZZ!!!';
+const ADMIN_USERNAME = 'ShadowSmp';
+const ADMIN_PASSWORD = 'CHANGEUSBACKNOW!';
 
 const GENERAL_CHAT_ID = 'general';
 
@@ -756,7 +671,7 @@ const GENERAL_CHAT_ID = 'general';
 // corporate/mobile NATs may block the direct connection since there's
 // no relay fallback.
 const ICE_SERVERS = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
-const AVATAR_COLORS = ['#5b3a8e','#8b5cf6','#e0b95c','#2f9451','#c2437a','#3a6ea5','#a6541f'];
+const AVATAR_COLORS = ['#5865f2','#eb459e','#faa61a','#23a55a','#f23f42','#3ba55d','#5865f2'];
 
 let currentUser = null;   // display username (original casing)
 let myKey = null;         // sanitized key used throughout the DB
@@ -770,9 +685,11 @@ let outgoingRequestsCache = {}; // toKey -&gt; username
 let blockedCache = {};          // blockedKey -&gt; username
 let chatsMetaCache = {};        // chatId -&gt; meta
 let nicknamesCache = {};        // friendKey -&gt; nickname
-let statusCache = {};           // userKey -&gt; {state,last_changed}
+let statusCache = {};           // userKey -&gt; {state,last_changed,username}
 let avatarsCache = {};          // userKey -&gt; avatarUrl
-let voiceParticipantsAllCache = {}; // chatId -&gt; {userKey: username}  (for sidebar &quot;N in voice&quot;)
+let voiceParticipantsAllCache = {}; // chatId -&gt; {userKey: username}
+let mutedCache = {};            // userKey -&gt; username (muted, cannot send messages)
+let bannedCache = {};           // userKey -&gt; username (banned, cannot log in / forced out)
 
 let currentChatId = null;
 let currentChatMeta = null;
@@ -781,7 +698,7 @@ let searchQuery = '';
 
 let friendsRef=null, incomingReqRef=null, outgoingReqRef=null, blockedRef=null,
     chatsMetaRef=null, nicknamesRef=null, statusRef=null, avatarsRef=null,
-    allVoiceRef=null, myStatusRef=null;
+    allVoiceRef=null, myStatusRef=null, mutedRef=null, bannedRef=null;
 let messagesRef=null, messagesListener=null;
 let typingRef=null, typingListener=null;
 let typingSelfTimeout=null, iAmTyping=false;
@@ -836,10 +753,21 @@ function isBlockedUsername(username){
   return !!blockedCache[sanitizeUsernameKey(username || '')];
 }
 
+function isOwnerKey(key){
+  return key === ADMIN_USERNAME.toLowerCase();
+}
+function ownerBadgeHtml(key){
+  return isOwnerKey(key) ? ' &lt;span class=&quot;owner-tag&quot;&gt;👑 OWNER&lt;/span&gt;' : '';
+}
+function mutedTagHtml(key){
+  return mutedCache[key] ? ' &lt;span class=&quot;muted-tag&quot;&gt;🔇 muted&lt;/span&gt;' : '';
+}
+function amMuted(){ return !isAdmin &amp;&amp; !!mutedCache[myKey]; }
+
 function setConnPill(state){
   const pill = document.getElementById('connPill');
-  if(state === 'online'){ pill.textContent='● live'; pill.className='conn-pill online'; }
-  else if(state === 'offline'){ pill.textContent='● offline'; pill.className='conn-pill offline'; }
+  if(state === 'online'){ pill.textContent='● Connected'; pill.className='conn-pill online'; }
+  else if(state === 'offline'){ pill.textContent='● Offline'; pill.className='conn-pill offline'; }
   else { pill.textContent='connecting…'; pill.className='conn-pill'; }
 }
 
@@ -855,7 +783,7 @@ function switchTab(mode){
   authMode = mode;
   document.getElementById('tabLogin').classList.toggle('active', mode==='login');
   document.getElementById('tabRegister').classList.toggle('active', mode==='register');
-  document.getElementById('submitBtn').textContent = mode==='login' ? 'Enter the Shadows' : 'Create Account';
+  document.getElementById('submitBtn').textContent = mode==='login' ? 'Continue' : 'Create Account';
   document.getElementById('authMsg').textContent = '';
   document.getElementById('passwordInput').autocomplete = mode==='login' ? 'current-password' : 'new-password';
 }
@@ -866,7 +794,7 @@ async function handleAuthSubmit(e){
   const password = document.getElementById('passwordInput').value;
   const msgEl = document.getElementById('authMsg');
   const submitBtn = document.getElementById('submitBtn');
-  msgEl.style.color = 'var(--ember)';
+  msgEl.style.color = 'var(--danger)';
   msgEl.textContent = '';
 
   if(!usernameRaw || !password){ msgEl.textContent = 'Please fill in both fields.'; return; }
@@ -891,23 +819,25 @@ async function handleAuthSubmit(e){
     const snap = await userRef.get();
 
     if(authMode === 'register'){
-      if(snap.exists()){ msgEl.textContent = 'That name already walks these shadows. Try logging in.'; return; }
+      if(snap.exists()){ msgEl.textContent = 'That name is already taken. Try logging in.'; return; }
       const passwordHash = await hashPassword(password);
       await userRef.set({ username: usernameRaw, passwordHash, joined: firebase.database.ServerValue.TIMESTAMP });
       isAdmin = false;
       loginSuccess(usernameRaw, userKey);
     } else {
-      if(!snap.exists()){ msgEl.textContent = 'No such shadow exists yet. Create an account.'; return; }
+      if(!snap.exists()){ msgEl.textContent = 'No account with that name yet. Create one instead.'; return; }
       const userData = snap.val();
       const passwordHash = await hashPassword(password);
       if(userData.passwordHash !== passwordHash){ msgEl.textContent = 'Incorrect password.'; return; }
+      const banSnap = await db.ref('bannedUsers/' + userKey).get();
+      if(banSnap.exists()){ msgEl.textContent = 'You have been banned from Bored Chat.'; return; }
       isAdmin = false;
       loginSuccess(userData.username || usernameRaw, userKey);
     }
   }catch(err){
     console.error(err);
     const code = err &amp;&amp; err.code ? ' (' + err.code + ')' : '';
-    msgEl.textContent = 'A shadow blocked the connection' + code + ': ' + (err &amp;&amp; err.message ? err.message : 'unknown error');
+    msgEl.textContent = 'Connection blocked' + code + ': ' + (err &amp;&amp; err.message ? err.message : 'unknown error');
   }finally{
     submitBtn.disabled = false;
     submitBtn.textContent = originalLabel;
@@ -921,7 +851,7 @@ function loginSuccess(username, userKey){
   document.getElementById('chatScreen').style.display = 'flex';
   document.getElementById('adminBadge').style.display = isAdmin ? 'inline-block' : 'none';
   setConnPill('connecting');
-  renderMyUserPill();
+  renderMyUserBar();
 
   ensureGeneralChatExists().then(() =&gt; {
     startFriendsListener();
@@ -934,6 +864,8 @@ function loginSuccess(username, userKey){
     startAvatarsListener();
     startAllVoiceListener();
     startIncomingCallListener();
+    startMutedListener();
+    startBannedListener();
     startPresence();
     switchSidebarTab('friends');
     openGeneralChat();
@@ -946,13 +878,14 @@ function logout(){
   stopMessageListener();
   stopTypingListener();
   if(myStatusRef) myStatusRef.set({ state:'offline', last_changed: firebase.database.ServerValue.TIMESTAMP });
-  [friendsRef,incomingReqRef,outgoingReqRef,blockedRef,chatsMetaRef,nicknamesRef,statusRef,avatarsRef,allVoiceRef,incomingCallRef]
+  [friendsRef,incomingReqRef,outgoingReqRef,blockedRef,chatsMetaRef,nicknamesRef,statusRef,avatarsRef,allVoiceRef,incomingCallRef,mutedRef,bannedRef]
     .forEach(r =&gt; { if(r) r.off('value'); });
-  friendsRef=incomingReqRef=outgoingReqRef=blockedRef=chatsMetaRef=nicknamesRef=statusRef=avatarsRef=allVoiceRef=incomingCallRef=myStatusRef=null;
+  friendsRef=incomingReqRef=outgoingReqRef=blockedRef=chatsMetaRef=nicknamesRef=statusRef=avatarsRef=allVoiceRef=incomingCallRef=myStatusRef=mutedRef=bannedRef=null;
 
   currentUser=null; myKey=null; isAdmin=false;
   friendsCache={}; incomingRequestsCache={}; outgoingRequestsCache={}; blockedCache={};
   chatsMetaCache={}; nicknamesCache={}; statusCache={}; avatarsCache={}; voiceParticipantsAllCache={};
+  mutedCache={}; bannedCache={};
   currentChatId=null; currentChatMeta=null; currentMessagesList=[];
 
   document.getElementById('chatScreen').style.display = 'none';
@@ -960,7 +893,7 @@ function logout(){
   document.getElementById('usernameInput').value = '';
   document.getElementById('passwordInput').value = '';
   document.getElementById('authMsg').textContent = '';
-  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('chanCol').classList.remove('mobile-open');
 }
 
 /* ---------- presence (online/offline) ---------- */
@@ -969,8 +902,8 @@ function startPresence(){
   myStatusRef = db.ref('status/' + myKey);
   db.ref('.info/connected').on('value', (snap) =&gt; {
     if(snap.val() === false) return;
-    myStatusRef.onDisconnect().set({ state:'offline', last_changed: firebase.database.ServerValue.TIMESTAMP })
-      .then(() =&gt; myStatusRef.set({ state:'online', last_changed: firebase.database.ServerValue.TIMESTAMP }));
+    myStatusRef.onDisconnect().set({ state:'offline', username: currentUser, last_changed: firebase.database.ServerValue.TIMESTAMP })
+      .then(() =&gt; myStatusRef.set({ state:'online', username: currentUser, last_changed: firebase.database.ServerValue.TIMESTAMP }));
   });
 }
 
@@ -980,7 +913,45 @@ function startStatusListener(){
     statusCache = snap.val() || {};
     renderFriendsList();
     updateCurrentChatLabel();
+    renderOnlineList();
   });
+}
+
+/* ---------- online users panel (everyone currently online) ---------- */
+
+function renderOnlineList(){
+  const scroll = document.getElementById('onlineColScroll');
+  const countEl = document.getElementById('onlineCount');
+  if(!scroll || !countEl) return;
+
+  const keys = Object.keys(statusCache).filter(k =&gt; statusCache[k] &amp;&amp; statusCache[k].state === 'online');
+  countEl.textContent = keys.length;
+
+  if(!keys.length){
+    scroll.innerHTML = '&lt;div class=&quot;online-empty-note&quot;&gt;Nobody else is around right now.&lt;/div&gt;';
+    return;
+  }
+
+  const nameFor = (k) =&gt; (statusCache[k] &amp;&amp; statusCache[k].username) || friendsCache[k] || k;
+  keys.sort((a,b) =&gt; nameFor(a).localeCompare(nameFor(b)));
+
+  scroll.innerHTML = keys.map(k =&gt; {
+    const username = nameFor(k);
+    const shown = (k === myKey ? username : displayNameFor(username)) + ownerBadgeHtml(k) + mutedTagHtml(k);
+    const isMe = k === myKey;
+    const isFriend = !!friendsCache[k];
+    const clickable = isMe || isFriend;
+    const rawEsc = escapeHtml(username).replace(/'/g,&quot;\\'&quot;);
+    const modBtns = (isAdmin &amp;&amp; !isMe) ? `
+      &lt;button class=&quot;mini-btn mute&quot; onclick=&quot;event.stopPropagation(); toggleMuteUserByKey('${k}','${rawEsc}')&quot; title=&quot;${mutedCache[k] ? 'Unmute' : 'Mute'}&quot;&gt;${mutedCache[k] ? '🔊' : '🔇'}&lt;/button&gt;
+      &lt;button class=&quot;mini-btn ban&quot; onclick=&quot;event.stopPropagation(); banUserByKey('${k}','${rawEsc}')&quot; title=&quot;Ban&quot;&gt;⛔&lt;/button&gt;` : '';
+    return `&lt;div class=&quot;online-item&quot; ${clickable &amp;&amp; !isMe ? `onclick=&quot;openFriendDm('${k}')&quot;` : ''} title=&quot;${clickable ? (isMe ? 'You' : 'Open DM') : 'Add them as a friend to message'}&quot;&gt;
+      ${avatarHtml(username,'xs')}
+      &lt;span class=&quot;presence-dot online&quot; style=&quot;margin-left:-20px;margin-top:12px;&quot;&gt;&lt;/span&gt;
+      &lt;span class=&quot;item-name&quot;&gt;${escapeHtml(shown)}&lt;/span&gt;
+      ${isMe ? '&lt;span class=&quot;you-tag&quot;&gt;you&lt;/span&gt;' : modBtns}
+    &lt;/div&gt;`;
+  }).join('');
 }
 function isOnline(userKey){ return !!(statusCache[userKey] &amp;&amp; statusCache[userKey].state === 'online'); }
 
@@ -990,15 +961,16 @@ function startAvatarsListener(){
   avatarsRef = db.ref('avatars');
   avatarsRef.on('value', (snap) =&gt; {
     avatarsCache = snap.val() || {};
-    renderMyUserPill();
+    renderMyUserBar();
     renderFriendsList();
     renderMessages();
+    renderOnlineList();
   });
 }
 
-function renderMyUserPill(){
-  document.getElementById('currentUserPill').innerHTML =
-    avatarHtml(currentUser, 'sm') + '&lt;span&gt;' + escapeHtml(currentUser || '') + '&lt;/span&gt;';
+function renderMyUserBar(){
+  document.getElementById('currentUserAvatarSlot').innerHTML = avatarHtml(currentUser, 'sm');
+  document.getElementById('userBarName').textContent = currentUser || '';
 }
 
 function openProfileModal(){
@@ -1039,8 +1011,8 @@ function switchSidebarTab(tab){
   document.getElementById('friendsPanel').style.display = tab==='friends' ? 'block' : 'none';
   document.getElementById('groupsPanel').style.display = tab==='groups' ? 'block' : 'none';
 }
-function toggleSidebarMobile(){ document.getElementById('sidebar').classList.toggle('mobile-open'); }
-function closeSidebarMobile(){ document.getElementById('sidebar').classList.remove('mobile-open'); }
+function toggleSidebarMobile(){ document.getElementById('chanCol').classList.toggle('mobile-open'); }
+function closeSidebarMobile(){ document.getElementById('chanCol').classList.remove('mobile-open'); }
 
 /* =========================================================
    FRIENDS SYSTEM
@@ -1085,6 +1057,86 @@ function startNicknamesListener(){
   });
 }
 
+/* =========================================================
+   MODERATION: mute + ban
+========================================================= */
+
+function startMutedListener(){
+  mutedRef = db.ref('mutedUsers');
+  mutedRef.on('value', (snap) =&gt; {
+    mutedCache = snap.val() || {};
+    renderMessages();
+    renderFriendsList();
+    renderOnlineList();
+    renderModBlock();
+    updateComposerState();
+  });
+}
+
+function startBannedListener(){
+  bannedRef = db.ref('bannedUsers');
+  bannedRef.on('value', (snap) =&gt; {
+    bannedCache = snap.val() || {};
+    renderModBlock();
+    // If I've just been banned while active, kick myself out immediately.
+    if(!isAdmin &amp;&amp; myKey &amp;&amp; bannedCache[myKey]){
+      alert('You have been banned from Bored Chat.');
+      logout();
+    }
+  });
+}
+
+async function muteUserByKey(key, username){
+  if(!isAdmin || !key || key === myKey) return;
+  try{ await db.ref('mutedUsers/' + key).set(username); }
+  catch(err){ console.error('Failed to mute user', err); }
+}
+async function unmuteUserByKey(key){
+  if(!isAdmin) return;
+  try{ await db.ref('mutedUsers/' + key).remove(); }
+  catch(err){ console.error('Failed to unmute user', err); }
+}
+async function toggleMuteUserByKey(key, username){
+  if(mutedCache[key]) await unmuteUserByKey(key);
+  else await muteUserByKey(key, username);
+}
+async function banUserByKey(key, username){
+  if(!isAdmin || !key || key === myKey) return;
+  if(!confirm('Ban ' + username + ' from Bored Chat? They will be logged out and unable to log back in until unbanned.')) return;
+  try{ await db.ref('bannedUsers/' + key).set(username); }
+  catch(err){ console.error('Failed to ban user', err); }
+}
+async function unbanUserByKey(key){
+  if(!isAdmin) return;
+  try{ await db.ref('bannedUsers/' + key).remove(); }
+  catch(err){ console.error('Failed to unban user', err); }
+}
+
+function renderModBlock(){
+  const block = document.getElementById('modBlock');
+  if(!block) return;
+  if(!isAdmin){ block.style.display = 'none'; return; }
+  block.style.display = 'block';
+
+  const mutedKeys = Object.keys(mutedCache);
+  const mutedList = document.getElementById('mutedAdminList');
+  mutedList.innerHTML = mutedKeys.length ? mutedKeys.map(k =&gt; `
+    &lt;div class=&quot;request-row&quot;&gt;
+      ${avatarHtml(mutedCache[k],'xs')}
+      &lt;span class=&quot;req-name&quot;&gt;${escapeHtml(mutedCache[k])}&lt;/span&gt;
+      &lt;button class=&quot;req-unblock&quot; onclick=&quot;unmuteUserByKey('${k}')&quot;&gt;Unmute&lt;/button&gt;
+    &lt;/div&gt;`).join('') : '&lt;div class=&quot;empty-list-note&quot;&gt;Nobody is muted.&lt;/div&gt;';
+
+  const bannedKeys = Object.keys(bannedCache);
+  const bannedList = document.getElementById('bannedAdminList');
+  bannedList.innerHTML = bannedKeys.length ? bannedKeys.map(k =&gt; `
+    &lt;div class=&quot;request-row&quot;&gt;
+      ${avatarHtml(bannedCache[k],'xs')}
+      &lt;span class=&quot;req-name&quot;&gt;${escapeHtml(bannedCache[k])}&lt;/span&gt;
+      &lt;button class=&quot;req-unblock&quot; onclick=&quot;unbanUserByKey('${k}')&quot;&gt;Unban&lt;/button&gt;
+    &lt;/div&gt;`).join('') : '&lt;div class=&quot;empty-list-note&quot;&gt;Nobody is banned.&lt;/div&gt;';
+}
+
 function updateRequestBadge(){
   const badge = document.getElementById('incomingReqBadge');
   const n = Object.keys(incomingRequestsCache).filter(k =&gt; !blockedCache[k]).length;
@@ -1114,7 +1166,7 @@ async function sendFriendRequestFromInput(){
       return;
     }
     const targetSnap = await db.ref('users/' + targetKey).get();
-    if(!targetSnap.exists()){ msgEl.textContent = 'No such shadow exists with that name.'; return; }
+    if(!targetSnap.exists()){ msgEl.textContent = 'No account exists with that name.'; return; }
     const targetUsername = (targetSnap.val() || {}).username || targetRaw;
 
     await db.ref('friendRequests/' + targetKey + '/' + myKey).set(currentUser);
@@ -1167,7 +1219,6 @@ async function blockUserByKey(targetKey, targetUsername){
   if(!confirm('Block ' + targetUsername + '? You will stop seeing their messages everywhere, and they can no longer call or add you.')) return;
   try{
     await db.ref('blocked/' + myKey + '/' + targetKey).set(targetUsername);
-    // Blocking also removes any existing friendship / pending requests both ways.
     await db.ref('friends/' + myKey + '/' + targetKey).remove();
     await db.ref('friends/' + targetKey + '/' + myKey).remove();
     await db.ref('friendRequests/' + myKey + '/' + targetKey).remove();
@@ -1215,7 +1266,7 @@ function renderOutgoingRequests(){
     &lt;div class=&quot;request-row&quot;&gt;
       ${avatarHtml(outgoingRequestsCache[k],'xs')}
       &lt;span class=&quot;req-name&quot;&gt;${escapeHtml(outgoingRequestsCache[k])}&lt;/span&gt;
-      &lt;span style=&quot;font-size:0.7rem;color:var(--text-dim);&quot;&gt;waiting…&lt;/span&gt;
+      &lt;span style=&quot;font-size:0.7rem;color:var(--text-muted);&quot;&gt;waiting…&lt;/span&gt;
       &lt;button class=&quot;req-cancel&quot; onclick=&quot;cancelOutgoingRequest('${k}')&quot;&gt;✕&lt;/button&gt;
     &lt;/div&gt;`).join('');
 }
@@ -1241,15 +1292,19 @@ function renderFriendsList(){
   }
   list.innerHTML = keys.map(k =&gt; {
     const active = currentChatId === dmChatId(myKey, k);
-    const name = escapeHtml(displayNameFor(friendsCache[k]));
+    const name = escapeHtml(displayNameFor(friendsCache[k])) + ownerBadgeHtml(k) + mutedTagHtml(k);
     const rawEsc = escapeHtml(friendsCache[k]).replace(/'/g,&quot;\\'&quot;);
+    const modBtns = (isAdmin &amp;&amp; k !== myKey) ? `
+      &lt;button class=&quot;mini-btn mute&quot; onclick=&quot;event.stopPropagation(); toggleMuteUserByKey('${k}','${rawEsc}')&quot; title=&quot;${mutedCache[k] ? 'Unmute' : 'Mute'}&quot;&gt;${mutedCache[k] ? '🔊' : '🔇'}&lt;/button&gt;
+      &lt;button class=&quot;mini-btn ban&quot; onclick=&quot;event.stopPropagation(); banUserByKey('${k}','${rawEsc}')&quot; title=&quot;Ban&quot;&gt;⛔&lt;/button&gt;` : '';
     return `&lt;div class=&quot;list-item ${active ? 'active' : ''}&quot; onclick=&quot;openFriendDm('${k}')&quot;&gt;
       ${avatarHtml(friendsCache[k],'xs')}
-      &lt;span class=&quot;presence-dot ${isOnline(k) ? 'online' : ''}&quot;&gt;&lt;/span&gt;
       &lt;span class=&quot;item-name&quot;&gt;${name}&lt;/span&gt;
+      &lt;span class=&quot;presence-dot ${isOnline(k) ? 'online' : ''}&quot; style=&quot;margin-left:-20px;margin-top:12px;&quot;&gt;&lt;/span&gt;
       &lt;button class=&quot;mini-btn nick&quot; onclick=&quot;event.stopPropagation(); setNicknameFor('${k}','${rawEsc}')&quot; title=&quot;Set nickname&quot;&gt;✏️&lt;/button&gt;
       &lt;button class=&quot;mini-btn call&quot; onclick=&quot;event.stopPropagation(); startCall('${k}','${rawEsc}','audio')&quot; title=&quot;Voice call&quot;&gt;📞&lt;/button&gt;
       &lt;button class=&quot;mini-btn video&quot; onclick=&quot;event.stopPropagation(); startCall('${k}','${rawEsc}','video')&quot; title=&quot;Video call&quot;&gt;🎥&lt;/button&gt;
+      ${modBtns}
       &lt;button class=&quot;mini-btn block&quot; onclick=&quot;event.stopPropagation(); blockUserByKey('${k}','${rawEsc}')&quot; title=&quot;Block&quot;&gt;🚫&lt;/button&gt;
       &lt;button class=&quot;mini-btn del&quot; onclick=&quot;event.stopPropagation(); unfriend('${k}')&quot; title=&quot;Remove friend&quot;&gt;✕&lt;/button&gt;
     &lt;/div&gt;`;
@@ -1257,7 +1312,8 @@ function renderFriendsList(){
 }
 
 /* =========================================================
-   CHATS: General (public), DMs (friends only), Groups (friends only)
+   CHATS: public channels (anyone), DMs (friends), group
+   channels (invite-only, but ANY member can invite)
 ========================================================= */
 
 async function ensureGeneralChatExists(){
@@ -1265,10 +1321,10 @@ async function ensureGeneralChatExists(){
     const snap = await db.ref('chatsMeta/' + GENERAL_CHAT_ID).get();
     if(!snap.exists()){
       await db.ref('chatsMeta/' + GENERAL_CHAT_ID).set({
-        type: 'public', name: 'General', createdBy: 'system', created: firebase.database.ServerValue.TIMESTAMP
+        type: 'public', name: 'general', createdBy: 'system', created: firebase.database.ServerValue.TIMESTAMP
       });
     }
-  }catch(err){ console.error('Could not verify General chat', err); }
+  }catch(err){ console.error('Could not verify general channel', err); }
 }
 
 function startChatsMetaListener(){
@@ -1276,10 +1332,150 @@ function startChatsMetaListener(){
   chatsMetaRef.on('value', (snap) =&gt; {
     chatsMetaCache = snap.val() || {};
     renderGroupsList();
+    renderPublicChannelsList();
     if(currentChatId) updateCurrentChatLabel();
+    updateHeaderCallButtons();
   });
 }
-function isMemberOf(meta){ if(!meta) return false; return !!(meta.members &amp;&amp; meta.members[myKey]); }
+function isMemberOf(meta){
+  if(!meta) return false;
+  if(meta.type === 'public') return true;
+  return !!(meta.members &amp;&amp; meta.members[myKey]);
+}
+function canManageChannel(meta){
+  if(!meta) return false;
+  return isAdmin || meta.createdBy === myKey;
+}
+
+/* ---------- invite codes ---------- */
+
+function generateInviteCode(){
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for(let i=0;i&lt;6;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+
+async function ensureInviteCode(chatId){
+  const meta = chatsMetaCache[chatId];
+  if(meta &amp;&amp; meta.inviteCode) return meta.inviteCode;
+  let code = generateInviteCode();
+  // extremely unlikely, but avoid collisions
+  for(let tries=0; tries&lt;5; tries++){
+    const taken = await db.ref('inviteCodes/' + code).get();
+    if(!taken.exists()) break;
+    code = generateInviteCode();
+  }
+  await db.ref('inviteCodes/' + code).set(chatId);
+  await db.ref('chatsMeta/' + chatId + '/inviteCode').set(code);
+  return code;
+}
+
+let inviteModalChatId = null;
+
+async function openInviteModal(){
+  if(!currentChatId) return;
+  const meta = chatsMetaCache[currentChatId];
+  if(!meta || meta.type === 'dm') return;
+  inviteModalChatId = currentChatId;
+  document.getElementById('inviteErr').textContent = '';
+  document.getElementById('inviteErr').className = 'modal-err';
+  document.getElementById('inviteCodeBox').textContent = '······';
+  document.getElementById('inviteModal').classList.add('open');
+  try{
+    const code = await ensureInviteCode(currentChatId);
+    document.getElementById('inviteCodeBox').textContent = code;
+  }catch(err){
+    console.error(err);
+    document.getElementById('inviteErr').textContent = 'Could not create a code: ' + (err.message || 'unknown error');
+  }
+}
+function closeInviteModal(){ document.getElementById('inviteModal').classList.remove('open'); inviteModalChatId = null; }
+
+function copyInviteCode(){
+  const code = document.getElementById('inviteCodeBox').textContent.trim();
+  const errEl = document.getElementById('inviteErr');
+  if(!code || code.indexOf('·') === 0) return;
+  const done = () =&gt; { errEl.className = 'modal-err ok'; errEl.textContent = 'Code copied.'; };
+  if(navigator.clipboard &amp;&amp; navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(done).catch(() =&gt; {
+      errEl.className = 'modal-err'; errEl.textContent = 'Copy failed — select the code and copy it manually.';
+    });
+  } else {
+    errEl.className = 'modal-err'; errEl.textContent = 'Select the code above and copy it manually.';
+  }
+}
+
+async function regenerateInviteCode(){
+  if(!inviteModalChatId) return;
+  const meta = chatsMetaCache[inviteModalChatId];
+  const errEl = document.getElementById('inviteErr');
+  errEl.className = 'modal-err';
+  if(!canManageChannel(meta)){ errEl.textContent = 'Only the channel creator or the owner can reset the code.'; return; }
+  try{
+    if(meta.inviteCode) await db.ref('inviteCodes/' + meta.inviteCode).remove();
+    await db.ref('chatsMeta/' + inviteModalChatId + '/inviteCode').remove();
+    const code = await ensureInviteCode(inviteModalChatId);
+    document.getElementById('inviteCodeBox').textContent = code;
+    errEl.className = 'modal-err ok';
+    errEl.textContent = 'New code created. The old one no longer works.';
+  }catch(err){
+    console.error(err);
+    errEl.textContent = 'Could not reset the code: ' + (err.message || 'unknown error');
+  }
+}
+
+async function joinChannelByCode(){
+  const input = document.getElementById('joinCodeInput');
+  const msgEl = document.getElementById('joinCodeMsg');
+  msgEl.className = 'add-friend-msg';
+  const code = input.value.trim().toUpperCase();
+  if(!code){ msgEl.textContent = 'Paste an invite code first.'; return; }
+  try{
+    const snap = await db.ref('inviteCodes/' + code).get();
+    if(!snap.exists()){ msgEl.textContent = 'That code does not match any channel.'; return; }
+    const chatId = snap.val();
+    const metaSnap = await db.ref('chatsMeta/' + chatId).get();
+    if(!metaSnap.exists()){ msgEl.textContent = 'That channel no longer exists.'; return; }
+    const meta = metaSnap.val();
+    if(meta.type === 'group') await db.ref('chatsMeta/' + chatId + '/members/' + myKey).set(true);
+    input.value = '';
+    msgEl.className = 'add-friend-msg ok';
+    msgEl.textContent = 'Joined ' + (meta.name || 'the channel') + '.';
+    openChat(chatId);
+    closeSidebarMobile();
+  }catch(err){
+    console.error(err);
+    msgEl.textContent = 'Could not join: ' + (err.message || 'unknown error');
+  }
+}
+
+/* ---------- channel lists ---------- */
+
+function renderPublicChannelsList(){
+  const list = document.getElementById('publicChannelsList');
+  if(!list) return;
+  const ids = Object.keys(chatsMetaCache).filter(id =&gt; chatsMetaCache[id] &amp;&amp; chatsMetaCache[id].type === 'public');
+  ids.sort((a,b) =&gt; {
+    if(a === GENERAL_CHAT_ID) return -1;
+    if(b === GENERAL_CHAT_ID) return 1;
+    return (chatsMetaCache[a].created||0) - (chatsMetaCache[b].created||0);
+  });
+  if(!ids.length){ list.innerHTML = '&lt;div class=&quot;empty-list-note&quot;&gt;No public channels yet.&lt;/div&gt;'; return; }
+  list.innerHTML = ids.map(id =&gt; {
+    const meta = chatsMetaCache[id];
+    const active = id === currentChatId;
+    const voiceCount = Object.keys(voiceParticipantsAllCache[id] || {}).length;
+    const canDelete = isAdmin &amp;&amp; id !== GENERAL_CHAT_ID;
+    return `&lt;div class=&quot;list-item ${active ? 'active' : ''}&quot; onclick=&quot;openChatFromSidebar('${id}')&quot;&gt;
+      &lt;span class=&quot;hash&quot;&gt;#&lt;/span&gt;
+      &lt;span class=&quot;item-name&quot;&gt;${escapeHtml(meta.name || 'unnamed')}&lt;/span&gt;
+      ${voiceCount ? `&lt;span class=&quot;voice-count&quot;&gt;🎙️${voiceCount}&lt;/span&gt;` : ''}
+      &lt;button class=&quot;mini-btn invite&quot; onclick=&quot;event.stopPropagation(); openInviteFor('${id}')&quot; title=&quot;Invite code&quot;&gt;🔗&lt;/button&gt;
+      ${canDelete ? `&lt;button class=&quot;mini-btn del&quot; onclick=&quot;event.stopPropagation(); deleteChannel('${id}')&quot; title=&quot;Delete channel&quot;&gt;✕&lt;/button&gt;` : ''}
+    &lt;/div&gt;`;
+  }).join('');
+}
 
 function renderGroupsList(){
   const list = document.getElementById('groupsList');
@@ -1291,24 +1487,31 @@ function renderGroupsList(){
   ids.sort((a,b) =&gt; (chatsMetaCache[a].created||0) - (chatsMetaCache[b].created||0));
 
   if(!ids.length){
-    list.innerHTML = '&lt;div class=&quot;empty-list-note&quot;&gt;No group chats yet. Create one with friends.&lt;/div&gt;';
+    list.innerHTML = '&lt;div class=&quot;empty-list-note&quot;&gt;No channels yet. Create one, or join with an invite code.&lt;/div&gt;';
     return;
   }
   list.innerHTML = ids.map(id =&gt; {
     const meta = chatsMetaCache[id];
     const active = id === currentChatId;
     const voiceCount = Object.keys(voiceParticipantsAllCache[id] || {}).length;
-    return `&lt;div class=&quot;list-item ${active ? 'active' : ''}&quot; onclick=&quot;openChat('${id}')&quot;&gt;
+    const amMember = !!(meta.members &amp;&amp; meta.members[myKey]);
+    return `&lt;div class=&quot;list-item ${active ? 'active' : ''}&quot; onclick=&quot;openChatFromSidebar('${id}')&quot;&gt;
       &lt;span class=&quot;hash&quot;&gt;#&lt;/span&gt;
       &lt;span class=&quot;item-name&quot;&gt;${escapeHtml(meta.name || 'unnamed')}&lt;/span&gt;
       ${voiceCount ? `&lt;span class=&quot;voice-count&quot;&gt;🎙️${voiceCount}&lt;/span&gt;` : ''}
-      ${isAdmin ? `&lt;button class=&quot;mini-btn del&quot; onclick=&quot;event.stopPropagation(); deleteGroup('${id}')&quot; title=&quot;Delete group&quot;&gt;✕&lt;/button&gt;` : ''}
+      &lt;button class=&quot;mini-btn addppl&quot; onclick=&quot;event.stopPropagation(); openAddMemberFor('${id}')&quot; title=&quot;Add people&quot;&gt;＋&lt;/button&gt;
+      &lt;button class=&quot;mini-btn invite&quot; onclick=&quot;event.stopPropagation(); openInviteFor('${id}')&quot; title=&quot;Invite code&quot;&gt;🔗&lt;/button&gt;
+      ${amMember ? `&lt;button class=&quot;mini-btn leave&quot; onclick=&quot;event.stopPropagation(); leaveChannel('${id}')&quot; title=&quot;Leave channel&quot;&gt;🚪&lt;/button&gt;` : ''}
+      ${canManageChannel(meta) ? `&lt;button class=&quot;mini-btn del&quot; onclick=&quot;event.stopPropagation(); deleteChannel('${id}')&quot; title=&quot;Delete channel&quot;&gt;✕&lt;/button&gt;` : ''}
     &lt;/div&gt;`;
   }).join('');
 }
 
+function openChatFromSidebar(chatId){ openChat(chatId); closeSidebarMobile(); }
+function openInviteFor(chatId){ openChat(chatId); setTimeout(openInviteModal, 30); }
+function openAddMemberFor(chatId){ openChat(chatId); setTimeout(openAddMemberModal, 30); }
+
 function openGeneralChat(){
-  document.getElementById('generalNavBtn').classList.add('active');
   openChat(GENERAL_CHAT_ID);
 }
 
@@ -1330,15 +1533,17 @@ async function ensureDmChatExists(chatId, friendKey){
 
 function openChat(chatId){
   currentChatId = chatId;
-  currentChatMeta = chatsMetaCache[chatId] || (chatId === GENERAL_CHAT_ID ? {type:'public', name:'General'} : null);
+  currentChatMeta = chatsMetaCache[chatId] || (chatId === GENERAL_CHAT_ID ? {type:'public', name:'general'} : null);
   currentMessagesList = [];
   closeSearch();
   document.getElementById('generalNavBtn').classList.toggle('active', chatId === GENERAL_CHAT_ID);
   renderFriendsList();
   renderGroupsList();
+  renderPublicChannelsList();
   updateCurrentChatLabel();
   updateHeaderCallButtons();
   updateVoicePanelVisibility();
+  updateComposerState();
   startMessageListener();
   startTypingListener();
 }
@@ -1351,7 +1556,7 @@ function clearChatView(){
   currentMessagesList = [];
   document.getElementById('currentChatLabel').textContent = '';
   document.getElementById('currentChatSub').textContent = '';
-  document.getElementById('messages').innerHTML = '&lt;div class=&quot;empty-state&quot;&gt;&lt;span class=&quot;glyph&quot;&gt;👥&lt;/span&gt;Pick General, a friend, or a group chat to begin.&lt;/div&gt;';
+  document.getElementById('messages').innerHTML = '&lt;div class=&quot;empty-state&quot;&gt;&lt;span class=&quot;glyph&quot;&gt;👥&lt;/span&gt;Pick #general, a friend, or a channel to begin.&lt;/div&gt;';
   updateHeaderCallButtons();
   updateVoicePanelVisibility();
 }
@@ -1363,8 +1568,8 @@ function updateCurrentChatLabel(){
   const sub = document.getElementById('currentChatSub');
   if(!meta){ label.textContent=''; sub.textContent=''; return; }
   if(meta.type === 'public'){
-    label.textContent = '🌐 ' + (meta.name || 'General');
-    sub.textContent = 'Everyone can see this chat';
+    label.textContent = '# ' + (meta.name || 'general');
+    sub.textContent = 'Public channel — everyone can see and post here';
   } else if(meta.type === 'dm'){
     const otherKey = Object.keys(meta.members || {}).find(k =&gt; k !== myKey);
     const otherName = friendsCache[otherKey] || (otherKey || '');
@@ -1372,7 +1577,8 @@ function updateCurrentChatLabel(){
     sub.textContent = isOnline(otherKey) ? 'Online' : 'Offline';
   } else {
     label.textContent = '#' + (meta.name || 'unnamed');
-    sub.textContent = Object.keys(meta.members || {}).length + ' members';
+    const n = Object.keys(meta.members || {}).length;
+    sub.textContent = n + (n === 1 ? ' member' : ' members') + ' · anyone here can invite';
   }
 }
 
@@ -1384,10 +1590,23 @@ function currentDmFriendKey(){
 function updateHeaderCallButtons(){
   const audioBtn = document.getElementById('headerCallAudioBtn');
   const videoBtn = document.getElementById('headerCallVideoBtn');
+  const addBtn = document.getElementById('headerAddPeopleBtn');
+  const inviteBtn = document.getElementById('headerInviteBtn');
+  const leaveBtn = document.getElementById('headerLeaveBtn');
+
   const friendKey = currentDmFriendKey();
-  const show = !!friendKey &amp;&amp; !!friendsCache[friendKey];
-  audioBtn.style.display = show ? 'inline-block' : 'none';
-  videoBtn.style.display = show ? 'inline-block' : 'none';
+  const showCall = !!friendKey &amp;&amp; !!friendsCache[friendKey];
+  audioBtn.style.display = showCall ? 'inline-block' : 'none';
+  videoBtn.style.display = showCall ? 'inline-block' : 'none';
+
+  const meta = chatsMetaCache[currentChatId] || currentChatMeta;
+  const isGroup = !!meta &amp;&amp; meta.type === 'group';
+  const isPublic = !!meta &amp;&amp; meta.type === 'public';
+  const amMember = isGroup &amp;&amp; !!(meta.members &amp;&amp; meta.members[myKey]);
+
+  addBtn.style.display = isGroup ? 'inline-block' : 'none';
+  inviteBtn.style.display = (isGroup || isPublic) ? 'inline-block' : 'none';
+  leaveBtn.style.display = amMember ? 'inline-block' : 'none';
 }
 function startCallWithCurrentFriend(type){
   const friendKey = currentDmFriendKey();
@@ -1395,12 +1614,26 @@ function startCallWithCurrentFriend(type){
   startCall(friendKey, friendsCache[friendKey], type);
 }
 
-/* ---------- new group modal ---------- */
+/* ---------- new channel modal ---------- */
 let newGroupSelected = new Set();
+let newChannelType = 'group';
+
+function setNewChannelType(type){
+  newChannelType = type;
+  document.getElementById('typeBtnPrivate').classList.toggle('active', type === 'group');
+  document.getElementById('typeBtnPublic').classList.toggle('active', type === 'public');
+  document.getElementById('newGroupPickerWrap').style.display = type === 'group' ? 'block' : 'none';
+  document.getElementById('newGroupNote').textContent = type === 'public'
+    ? 'Public channels show up for everyone, exactly like #general.'
+    : &quot;You'll get an invite code once it's created, so you can add people who aren't friends yet.&quot;;
+}
+
 function openNewGroupModal(){
   newGroupSelected = new Set();
   document.getElementById('newGroupName').value = '';
   document.getElementById('newGroupErr').textContent = '';
+  document.getElementById('newGroupTypeChoice').style.display = isAdmin ? 'flex' : 'none';
+  setNewChannelType('group');
   renderNewGroupMemberPicker();
   document.getElementById('newGroupModal').classList.add('open');
   setTimeout(() =&gt; document.getElementById('newGroupName').focus(), 50);
@@ -1410,7 +1643,7 @@ function renderNewGroupMemberPicker_ifOpen(){ if(document.getElementById('newGro
 function renderNewGroupMemberPicker(){
   const picker = document.getElementById('newGroupMemberPicker');
   const keys = Object.keys(friendsCache).sort((a,b) =&gt; friendsCache[a].localeCompare(friendsCache[b]));
-  if(!keys.length){ picker.innerHTML = '&lt;div class=&quot;empty-list-note&quot;&gt;Add some friends first — groups can only include friends.&lt;/div&gt;'; return; }
+  if(!keys.length){ picker.innerHTML = '&lt;div class=&quot;empty-list-note&quot;&gt;No friends to tick yet — create the channel anyway and share its invite code.&lt;/div&gt;'; return; }
   picker.innerHTML = keys.map(k =&gt; `
     &lt;label class=&quot;member-row&quot;&gt;
       &lt;input type=&quot;checkbox&quot; ${newGroupSelected.has(k) ? 'checked' : ''} onchange=&quot;toggleNewGroupMember('${k}', this.checked)&quot;&gt;
@@ -1422,29 +1655,37 @@ function toggleNewGroupMember(key, checked){ if(checked) newGroupSelected.add(ke
 async function submitNewGroup(){
   const name = document.getElementById('newGroupName').value.trim();
   const errEl = document.getElementById('newGroupErr');
-  if(!name){ errEl.textContent = 'Give the group a name.'; return; }
-  if(newGroupSelected.size === 0){ errEl.textContent = 'Pick at least one friend to add.'; return; }
+  errEl.className = 'modal-err';
+  if(!name){ errEl.textContent = 'Give the channel a name.'; return; }
+  const type = (isAdmin &amp;&amp; newChannelType === 'public') ? 'public' : 'group';
   try{
-    const members = { [myKey]: true };
-    newGroupSelected.forEach(k =&gt; members[k] = true);
     const newRef = db.ref('chatsMeta').push();
-    await newRef.set({ type:'group', name, members, createdBy: myKey, created: firebase.database.ServerValue.TIMESTAMP });
+    if(type === 'public'){
+      await newRef.set({ type:'public', name, createdBy: myKey, created: firebase.database.ServerValue.TIMESTAMP });
+    } else {
+      const members = { [myKey]: true };
+      newGroupSelected.forEach(k =&gt; members[k] = true);
+      await newRef.set({ type:'group', name, members, createdBy: myKey, created: firebase.database.ServerValue.TIMESTAMP });
+    }
+    await ensureInviteCode(newRef.key);
     closeNewGroupModal();
     switchSidebarTab('groups');
     openChat(newRef.key);
     closeSidebarMobile();
   }catch(err){
     console.error(err);
-    errEl.textContent = 'Could not create group: ' + (err &amp;&amp; err.message ? err.message : 'unknown error');
+    errEl.textContent = 'Could not create channel: ' + (err &amp;&amp; err.message ? err.message : 'unknown error');
   }
 }
 
-/* ---------- add member modal (group only) ---------- */
+/* ---------- add member modal (any member can use it) ---------- */
 let addMemberSelected = new Set();
 function openAddMemberModal(){
   if(!currentChatId || !currentChatMeta || currentChatMeta.type !== 'group') return;
   addMemberSelected = new Set();
   document.getElementById('addMemberErr').textContent = '';
+  document.getElementById('addMemberErr').className = 'modal-err';
+  document.getElementById('addByUsernameInput').value = '';
   renderAddMemberPicker();
   document.getElementById('addMemberModal').classList.add('open');
 }
@@ -1455,7 +1696,7 @@ function renderAddMemberPicker(){
   const meta = chatsMetaCache[currentChatId];
   const members = (meta &amp;&amp; meta.members) || {};
   const keys = Object.keys(friendsCache).filter(k =&gt; !members[k]).sort((a,b) =&gt; friendsCache[a].localeCompare(friendsCache[b]));
-  if(!keys.length){ picker.innerHTML = '&lt;div class=&quot;empty-list-note&quot;&gt;All your friends are already in this group (or you have none left to add).&lt;/div&gt;'; return; }
+  if(!keys.length){ picker.innerHTML = '&lt;div class=&quot;empty-list-note&quot;&gt;No friends left to tick. Add someone by username above, or share the invite code.&lt;/div&gt;'; return; }
   picker.innerHTML = keys.map(k =&gt; `
     &lt;label class=&quot;member-row&quot;&gt;
       &lt;input type=&quot;checkbox&quot; ${addMemberSelected.has(k) ? 'checked' : ''} onchange=&quot;toggleAddMember('${k}', this.checked)&quot;&gt;
@@ -1463,32 +1704,81 @@ function renderAddMemberPicker(){
     &lt;/label&gt;`).join('');
 }
 function toggleAddMember(key, checked){ if(checked) addMemberSelected.add(key); else addMemberSelected.delete(key); }
+
+async function addMemberByUsername(){
+  const input = document.getElementById('addByUsernameInput');
+  const errEl = document.getElementById('addMemberErr');
+  errEl.className = 'modal-err';
+  const raw = input.value.trim();
+  if(!raw){ errEl.textContent = 'Type a username first.'; return; }
+  if(!currentChatId || !currentChatMeta || currentChatMeta.type !== 'group'){ errEl.textContent = 'Open a channel first.'; return; }
+  const key = sanitizeUsernameKey(raw);
+  const meta = chatsMetaCache[currentChatId] || {};
+  if(meta.members &amp;&amp; meta.members[key]){ errEl.textContent = 'They are already in this channel.'; return; }
+  try{
+    const snap = await db.ref('users/' + key).get();
+    const isOwnerAccount = key === ADMIN_USERNAME.toLowerCase();
+    if(!snap.exists() &amp;&amp; !isOwnerAccount){ errEl.textContent = 'No account exists with that name.'; return; }
+    await db.ref('chatsMeta/' + currentChatId + '/members/' + key).set(true);
+    const shown = snap.exists() ? ((snap.val() || {}).username || raw) : ADMIN_USERNAME;
+    errEl.className = 'modal-err ok';
+    errEl.textContent = shown + ' was added to the channel.';
+    input.value = '';
+    renderAddMemberPicker();
+  }catch(err){
+    console.error(err);
+    errEl.textContent = 'Could not add them: ' + (err.message || 'unknown error');
+  }
+}
+
 async function submitAddMembers(){
   const errEl = document.getElementById('addMemberErr');
-  if(addMemberSelected.size === 0){ errEl.textContent = 'Pick at least one friend.'; return; }
+  errEl.className = 'modal-err';
+  if(addMemberSelected.size === 0){ errEl.textContent = 'Tick at least one friend, or add someone by username.'; return; }
   try{
     const updates = {};
     addMemberSelected.forEach(k =&gt; { updates['chatsMeta/' + currentChatId + '/members/' + k] = true; });
     await db.ref().update(updates);
-    closeAddMemberModal();
+    addMemberSelected = new Set();
+    errEl.className = 'modal-err ok';
+    errEl.textContent = 'Added.';
+    renderAddMemberPicker();
   }catch(err){
     console.error(err);
     errEl.textContent = 'Could not add members: ' + (err &amp;&amp; err.message ? err.message : 'unknown error');
   }
 }
 
-async function deleteGroup(chatId){
-  if(!isAdmin) return;
+/* ---------- leaving / deleting channels ---------- */
+
+async function leaveChannel(chatId){
   const meta = chatsMetaCache[chatId];
   if(!meta || meta.type !== 'group') return;
-  if(!confirm('Delete group &quot;' + (meta.name || chatId) + '&quot; and all its messages?')) return;
+  if(!confirm('Leave &quot;' + (meta.name || chatId) + '&quot;? You can rejoin with an invite code.')) return;
   try{
+    if(voiceState.chatId === chatId) await leaveVoiceChannel();
+    await db.ref('chatsMeta/' + chatId + '/members/' + myKey).remove();
+    if(currentChatId === chatId) openGeneralChat();
+  }catch(err){ console.error('Failed to leave channel', err); }
+}
+function leaveCurrentChannel(){ if(currentChatId) leaveChannel(currentChatId); }
+
+async function deleteChannel(chatId){
+  const meta = chatsMetaCache[chatId];
+  if(!meta) return;
+  if(chatId === GENERAL_CHAT_ID){ alert('#general cannot be deleted.'); return; }
+  if(!canManageChannel(meta)){ alert('Only the channel creator or the owner can delete this.'); return; }
+  if(!confirm('Delete channel &quot;' + (meta.name || chatId) + '&quot; and all its messages?')) return;
+  try{
+    if(meta.inviteCode) await db.ref('inviteCodes/' + meta.inviteCode).remove();
     await db.ref('chatsMeta/' + chatId).remove();
     await db.ref('chatsMsgs/' + chatId).remove();
     await db.ref('voiceChannels/' + chatId).remove();
-    if(currentChatId === chatId) clearChatView();
-  }catch(err){ console.error('Failed to delete group', err); }
+    if(currentChatId === chatId) openGeneralChat();
+  }catch(err){ console.error('Failed to delete channel', err); }
 }
+// kept for backwards compatibility with older handlers
+function deleteGroup(chatId){ deleteChannel(chatId); }
 
 /* ---------- messages (scoped to currentChatId) ---------- */
 
@@ -1519,6 +1809,15 @@ function highlightMatch(rawText, query){
   return safe.replace(re, (match) =&gt; '&lt;mark class=&quot;hl&quot;&gt;' + match + '&lt;/mark&gt;');
 }
 
+function mediaHtmlFor(url){
+  if(!url) return '';
+  const safe = escapeHtml(url);
+  if(/\.(mp4|webm|ogv|mov|m4v)(\?|#|$)/i.test(url)){
+    return `&lt;video class=&quot;msg-media&quot; src=&quot;${safe}&quot; controls playsinline&gt;&lt;/video&gt;`;
+  }
+  return `&lt;img class=&quot;msg-media&quot; src=&quot;${safe}&quot; alt=&quot;&quot; onclick=&quot;window.open(this.src,'_blank')&quot;&gt;`;
+}
+
 function renderMessages(){
   const container = document.getElementById('messages');
   const wasNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight &lt; 80;
@@ -1526,7 +1825,7 @@ function renderMessages(){
   const q = searchQuery.trim().toLowerCase();
 
   if(!list.length){
-    container.innerHTML = '&lt;div class=&quot;empty-state&quot;&gt;&lt;span class=&quot;glyph&quot;&gt;🕯️&lt;/span&gt;The shadows are silent. Be the first to speak.&lt;/div&gt;';
+    container.innerHTML = '&lt;div class=&quot;empty-state&quot;&gt;&lt;span class=&quot;glyph&quot;&gt;💬&lt;/span&gt;No messages yet. Say something to break the ice.&lt;/div&gt;';
     updateSearchCount(0, 0);
     return;
   }
@@ -1545,18 +1844,18 @@ function renderMessages(){
 
     const safeText = highlightMatch(text, q);
     const safeUser = highlightMatch(shownName, q);
+    const media = mediaHtmlFor(m.media);
     const delBtn = isAdmin ? `&lt;button class=&quot;msg-del-btn&quot; onclick=&quot;deleteMessage('${m.id}')&quot; title=&quot;Delete message&quot;&gt;✕&lt;/button&gt;` : '';
     const blockBtn = !mine ? `&lt;button class=&quot;msg-block-btn&quot; onclick=&quot;blockUserByKey('${sanitizeUsernameKey(user)}','${escapeHtml(user).replace(/'/g,&quot;\\'&quot;)}')&quot; title=&quot;Block ${escapeHtml(user)}&quot;&gt;🚫&lt;/button&gt;` : '';
-    const nameRow = !mine ? `&lt;div class=&quot;name-row&quot;&gt;${avatarHtml(user,'xs')}&lt;span class=&quot;meta&quot;&gt;${safeUser}&lt;/span&gt;&lt;/div&gt;` : '';
 
     return `&lt;div class=&quot;msg ${mine ? 'me' : 'other'}${dimClass}&quot;&gt;
-      ${nameRow}
-      &lt;div class=&quot;bubble-row&quot;&gt;
-        ${mine ? delBtn : ''}
+      &lt;div class=&quot;avatar-slot&quot;&gt;${avatarHtml(user,'md')}&lt;/div&gt;
+      &lt;div class=&quot;msg-body&quot;&gt;
+        &lt;div class=&quot;name-row&quot;&gt;&lt;span class=&quot;who&quot;&gt;${safeUser}${ownerBadgeHtml(sanitizeUsernameKey(user))}&lt;/span&gt;&lt;span class=&quot;when&quot;&gt;${time}&lt;/span&gt;&lt;/div&gt;
         &lt;div class=&quot;bubble&quot;&gt;${safeText}&lt;/div&gt;
-        ${!mine ? blockBtn + delBtn : ''}
+        ${media}
       &lt;/div&gt;
-      &lt;div class=&quot;meta&quot;&gt;${time}&lt;/div&gt;
+      &lt;div class=&quot;msg-actions&quot;&gt;${blockBtn}${delBtn}&lt;/div&gt;
     &lt;/div&gt;`;
   }).join('');
 
@@ -1576,7 +1875,7 @@ function startTypingListener(){
     const others = Object.keys(data).filter(k =&gt; k !== myKey &amp;&amp; data[k]);
     const bar = document.getElementById('typingBar');
     if(!others.length){ bar.textContent = ''; return; }
-    const names = others.map(k =&gt; displayNameFor(friendsCache[k] || k));
+    const names = others.map(k =&gt; displayNameFor(friendsCache[k] || (statusCache[k] &amp;&amp; statusCache[k].username) || k));
     bar.textContent = (names.length === 1 ? names[0] + ' is typing…' : names.join(', ') + ' are typing…');
   });
 }
@@ -1633,11 +1932,25 @@ async function deleteMessage(msgId){
   catch(err){ console.error('Failed to delete message', err); }
 }
 
+function updateComposerState(){
+  const note = document.getElementById('composerNote');
+  const input = document.getElementById('msgInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const attach = document.getElementById('attachBtn');
+  const muted = amMuted();
+  note.style.display = muted ? 'block' : 'none';
+  input.disabled = muted;
+  sendBtn.disabled = muted;
+  attach.disabled = muted;
+  input.placeholder = muted ? &quot;You can't send messages while muted&quot; : 'Message…';
+}
+
 async function sendMessage(){
   const input = document.getElementById('msgInput');
   const sendBtn = document.getElementById('sendBtn');
   const text = input.value.trim();
   if(!text || !currentUser || !currentChatId) return;
+  if(amMuted()){ updateComposerState(); return; }
   input.value = '';
   sendBtn.disabled = true;
   clearMyTypingFlag();
@@ -1653,10 +1966,39 @@ async function sendMessage(){
   }
 }
 
+/* ---------- attach image / video ---------- */
+
+function openAttachMediaModal(){
+  if(!currentChatId) return;
+  if(amMuted()) return;
+  document.getElementById('attachMediaUrl').value = '';
+  document.getElementById('attachMediaCaption').value = '';
+  document.getElementById('attachMediaErr').textContent = '';
+  document.getElementById('attachMediaModal').classList.add('open');
+  setTimeout(() =&gt; document.getElementById('attachMediaUrl').focus(), 50);
+}
+function closeAttachMediaModal(){ document.getElementById('attachMediaModal').classList.remove('open'); }
+
+async function submitAttachMedia(){
+  const url = document.getElementById('attachMediaUrl').value.trim();
+  const caption = document.getElementById('attachMediaCaption').value.trim();
+  const errEl = document.getElementById('attachMediaErr');
+  errEl.textContent = '';
+  if(!url){ errEl.textContent = 'Paste a link first.'; return; }
+  if(!/^https?:\/\/.+/i.test(url)){ errEl.textContent = 'That needs to be a full http(s) link.'; return; }
+  if(!currentChatId){ errEl.textContent = 'Open a chat first.'; return; }
+  try{
+    const newMsgRef = db.ref('chatsMsgs/' + currentChatId).push();
+    await newMsgRef.set({ user: currentUser, text: caption, media: url, time: firebase.database.ServerValue.TIMESTAMP });
+    closeAttachMediaModal();
+  }catch(err){
+    console.error(err);
+    errEl.textContent = 'Could not send: ' + (err.message || 'unknown error');
+  }
+}
+
 /* =========================================================
    1:1 CALLING (WebRTC, signaled through Firebase RTDB)
-   Friends-only by construction — only reachable from a friend's
-   row or an open DM. No TURN server: STUN-only P2P.
 ========================================================= */
 
 let callState = {
@@ -1882,27 +2224,23 @@ function cleanupCall(){
 }
 
 /* =========================================================
-   VOICE CHANNELS INSIDE GROUP CHATS
-   ---------------------------------------------------------
+   VOICE CHANNELS INSIDE CHANNELS (group + public)
    Full audio mesh: every participant opens a direct WebRTC
-   connection to every other participant (no SFU/media server).
-   Works well for small groups; each extra person adds another
-   connection for everyone already in the channel, so this is
-   best suited to a handful of people at once, same as most
-   serverless mesh voice setups.
+   connection to every other participant (no SFU/media server),
+   so this suits a handful of people at a time.
 ========================================================= */
 
-let voiceState = { chatId:null, localStream:null, peers:{} }; // peers[otherKey] = {pc, participantsListenerAttached}
+let voiceState = { chatId:null, localStream:null, peers:{} };
 let voiceParticipantsListenerRef = null;
 
 function startAllVoiceListener(){
-  // lightweight: just tracks participant counts across all group chats for the sidebar
   allVoiceRef = db.ref('voiceChannels');
   allVoiceRef.on('value', (snap) =&gt; {
     const data = snap.val() || {};
     voiceParticipantsAllCache = {};
     Object.keys(data).forEach(chatId =&gt; { voiceParticipantsAllCache[chatId] = data[chatId].participants || {}; });
     renderGroupsList();
+    renderPublicChannelsList();
     if(voiceState.chatId) renderVoiceChips();
     updateVoiceStatusBar();
   });
@@ -1910,9 +2248,10 @@ function startAllVoiceListener(){
 
 function updateVoicePanelVisibility(){
   const panel = document.getElementById('voicePanel');
-  const isGroup = currentChatMeta &amp;&amp; currentChatMeta.type === 'group';
-  panel.classList.toggle('show', !!isGroup);
-  if(isGroup) renderVoiceChips();
+  const meta = chatsMetaCache[currentChatId] || currentChatMeta;
+  const canVoice = !!meta &amp;&amp; (meta.type === 'group' || meta.type === 'public');
+  panel.classList.toggle('show', canVoice);
+  if(canVoice) renderVoiceChips();
 }
 
 function renderVoiceChips(){
@@ -1932,7 +2271,7 @@ function updateVoiceStatusBar(){
   const bar = document.getElementById('voiceStatusBar');
   if(!voiceState.chatId){ bar.classList.remove('show'); return; }
   const meta = chatsMetaCache[voiceState.chatId];
-  document.getElementById('voiceStatusName').textContent = 'In voice — ' + (meta ? meta.name : 'group');
+  document.getElementById('voiceStatusName').textContent = 'In voice — ' + (meta ? meta.name : 'channel');
   bar.classList.add('show');
 }
 
@@ -1974,7 +2313,7 @@ async function joinVoiceChannel(chatId){
 }
 
 function connectToVoicePeer(chatId, otherKey){
-  if(voiceState.peers[otherKey]) return; // already connecting/connected
+  if(voiceState.peers[otherKey]) return;
   const amInitiator = myKey &lt; otherKey;
   const pid = pairId(myKey, otherKey);
   const signalRef = db.ref('voiceChannels/' + chatId + '/signals/' + pid);
@@ -2047,7 +2386,7 @@ async function leaveVoiceChannel(){
   if(currentChatId === chatId) updateVoicePanelVisibility();
 }
 
-/* Enter key submits the new-group modal too */
+/* Enter key submits the open modal */
 document.addEventListener('keydown', (e) =&gt; {
   if(e.key !== 'Enter') return;
   if(document.getElementById('newGroupModal').classList.contains('open')) submitNewGroup();
